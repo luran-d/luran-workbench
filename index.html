@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="luran的工作台">
+<meta name="theme-color" content="#5B8EA8">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%235B8EA8'/><stop offset='100%25' style='stop-color:%2390A98D'/></linearGradient></defs><rect width='192' height='192' rx='36' fill='url(%23g)'/><text x='96' y='116' font-size='72' text-anchor='middle' fill='white' font-family='sans-serif'>📚</text></svg>">
+<title>luran的工作台</title>
+<style>
+:root{
+  --c-blue-dark:#4A7894;--c-blue:#5B8EA8;--c-blue-light:#7DAABE;
+  --c-green:#90A98D;--c-yellow:#E8D5A8;
+  --bg:#EDF4F8;--bg-card:#F4F9FC;--bg-gray:#EAE8E4;--bg-gray-light:#F4F2EE;
+  --text-p:#3A3E42;--text-s:#7A7E80;--text-m:#A8ABAC;
+  --border:#DCE0DF;
+  --success:#8DA88B;--warning:#C8AD60;--danger:#C08080;
+  --shadow-sm:0 1px 3px rgba(74,120,148,.06);
+  --shadow:0 2px 8px rgba(74,120,148,.08);
+  --shadow-lg:0 4px 16px rgba(74,120,148,.10);
+  --r-sm:8px;--r:12px;--r-lg:16px;
+  --sidebar-w:220px;--header-h:56px;
+  --tr:.25s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text-p);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,textarea,select{font-family:inherit;font-size:inherit}
+
+/* Sidebar */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(58,62,66,.3);z-index:90;opacity:0;visibility:hidden;transition:opacity var(--tr),visibility var(--tr)}
+.sidebar-overlay.show{opacity:1;visibility:visible}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--c-blue-dark);color:#F4F9FC;z-index:100;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform var(--tr);overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.sidebar-header{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sidebar-logo{width:36px;height:36px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--c-green),var(--c-blue-light));display:flex;align-items:center;justify-content:center;font-size:18px}
+.sidebar-title{font-size:15px;font-weight:600;letter-spacing:.5px}
+.sidebar-subtitle{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
+.sidebar-nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-section{padding:0 12px;margin-bottom:4px}
+.nav-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.3);padding:10px 10px 6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 8px;border-radius:var(--r-sm);font-size:13.5px;color:rgba(255,255,255,.65);transition:all .2s;cursor:pointer;position:relative}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .nav-dot{width:6px;height:6px;border-radius:50%;background:var(--c-blue-light);position:absolute;right:12px;opacity:0;transition:opacity .2s}
+.nav-item.active .nav-dot{opacity:1}
+.sidebar-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3);text-align:center;flex-shrink:0}
+
+/* Top Bar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);height:var(--header-h)}
+.menu-btn{width:36px;height:36px;border-radius:var(--r-sm);background:var(--bg-gray);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--c-blue-dark);flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:600;color:var(--c-blue-dark)}
+.topbar-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--bg-gray);color:var(--text-s);margin-left:auto}
+
+/* Main */
+.main-wrap{min-height:100vh}
+.page{padding:16px;max-width:800px;margin:0 auto;display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page Header */
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:700;color:var(--c-blue-dark);margin-bottom:4px}
+.page-desc{font-size:13px;color:var(--text-s)}
+
+/* Card */
+.card{background:var(--bg-card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:14px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;color:var(--c-blue-dark)}
+.card-subtitle{font-size:12px;color:var(--text-s);margin-top:2px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--bg-card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm);border:1px solid var(--border);text-align:center}
+.quote-card{background:linear-gradient(135deg,#D8EAF3,#C5DFEA);border-radius:var(--r-lg);padding:18px 16px;box-shadow:var(--shadow);margin-bottom:16px;color:var(--text-primary);position:relative;overflow:hidden}
+.quote-card::before{content:'"';position:absolute;top:-10px;left:12px;font-size:72px;font-family:Georgia,serif;opacity:.08;line-height:1;color:var(--c-blue-dark)}
+.quote-text{font-size:15px;line-height:1.7;font-weight:600;padding-right:24px;position:relative;z-index:1}
+.quote-author{font-size:12px;opacity:.55;margin-top:8px;text-align:right;position:relative;z-index:1}
+.quote-date{font-size:11px;opacity:.4;text-align:right;position:relative;z-index:1}
+.countdown-card{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.countdown-row{display:flex;justify-content:center;gap:75px;width:100%}
+.countdown-calendar{width:135px;height:135px;flex-shrink:0;background:#fff;border-radius:var(--r);box-shadow:0 2px 12px rgba(120,140,160,.12);border:1px solid #e8ecf1;overflow:hidden;text-align:center;display:flex;flex-direction:column}
+.countdown-cal-top{background:#FEF3D0;color:#2c2c2c;font-size:10px;font-weight:700;padding:7px 0;letter-spacing:1px}
+.countdown-cal-num{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0;background:linear-gradient(180deg,#fff 0%,#f8fafb 100%);background-image:linear-gradient(#eef2f5 1px,transparent 1px),linear-gradient(90deg,#eef2f5 1px,transparent 1px);background-size:10px 10px}
+.countdown-cal-num .num{font-size:44px;font-weight:900;color:#2B8CC4;line-height:1;display:block}
+.countdown-cal-num .unit{font-size:13px;font-weight:700;color:#2B8CC4}
+.countdown-cal-bottom{font-size:11px;font-weight:600;color:var(--text-primary);padding:8px 0 10px;background:linear-gradient(180deg,#fff 0%,#f8fafb 100%);background-image:linear-gradient(#eef2f5 1px,transparent 1px),linear-gradient(90deg,#eef2f5 1px,transparent 1px);background-size:10px 10px}
+.countdown-photo{width:135px;height:135px;flex-shrink:0;background:#fff;border-radius:var(--r);box-shadow:0 2px 12px rgba(120,140,160,.12);border:1px solid #e8ecf1;overflow:hidden;position:relative;cursor:pointer}
+.countdown-photo img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.countdown-photo .photo-placeholder{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#f9fafb,#f0f3f5);color:var(--text-m);font-size:11px;gap:4px}
+.countdown-photo .photo-placeholder-icon{font-size:24px}
+.countdown-info{width:100%;font-size:12px;color:var(--text-s);line-height:1.6}
+.countdown-info strong{color:var(--text-primary)}
+.countdown-bar-wrap{height:4px;background:var(--cream);border-radius:2px;margin-top:4px;overflow:hidden}
+.countdown-bar-fill{height:100%;background:linear-gradient(90deg,var(--c-blue),var(--c-green));border-radius:2px;transition:width .5s}
+.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.book-card{background:var(--cream);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid var(--border)}
+.book-card:hover{background:#fff;box-shadow:var(--shadow);transform:translateY(-1px)}
+.book-icon{font-size:24px;margin-bottom:4px}
+.book-name{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.5}
+.book-progress{margin-top:6px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.book-progress-fill{height:100%;background:var(--c-green);border-radius:2px;transition:width .3s}
+@media(min-width:768px){.book-grid{grid-template-columns:repeat(3,1fr)}}
+/* Mood Card */
+.mood-card{background:var(--bg-card);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mood-label{font-size:12px;color:var(--text-m);white-space:nowrap}
+.mood-options{display:flex;gap:8px}
+.mood-btn{width:50px;height:auto;border-radius:16px;border:1.5px solid #e8ecf1;background:#fff;cursor:pointer;transition:all .25s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 6px;gap:3px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.mood-btn .mood-emoji{font-size:20px;line-height:1;transition:transform .2s}
+.mood-btn .mood-txt{font-size:10px;color:var(--text-m);line-height:1;white-space:nowrap;letter-spacing:.3px}
+.mood-btn:hover{border-color:var(--c-blue-light);background:#F6FAFD;transform:translateY(-1px);box-shadow:0 3px 10px rgba(91,142,168,.1)}
+.mood-btn:hover .mood-emoji{transform:scale(1.15)}
+.mood-btn.active{border-color:var(--c-yellow);background:linear-gradient(135deg,#FFF9E6,#FFF3D6);box-shadow:0 0 0 3px rgba(232,213,168,.2)}
+.mood-note{flex:1;min-width:120px;font-size:12px;color:var(--text-m);padding:4px 8px;border:none;border-radius:6px;background:var(--cream);outline:none;transition:.2s}
+.mood-note:focus{background:#fff;box-shadow:0 0 0 2px var(--c-blue-light)}
+.file-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.file-item:last-child{border-bottom:none}
+.stat-card-clickable{cursor:pointer;transition:all .2s}.stat-card-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-card-clickable:active{transform:translateY(0)}
+.streak-day-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);gap:12px}
+.streak-day-row:last-child{border-bottom:none}
+.streak-day-date{font-size:14px;font-weight:500;white-space:nowrap}
+.streak-day-subjects{font-size:12px;color:var(--text-m);flex:1}
+.streak-day-hours{font-size:14px;font-weight:600;color:var(--c-blue);white-space:nowrap}
+.streak-summary{display:flex;justify-content:space-between;padding:12px;background:var(--cream);border-radius:var(--r);margin-bottom:12px;font-size:13px}
+.streak-summary-item{text-align:center}
+.streak-summary-val{font-size:18px;font-weight:700;color:var(--c-blue-dark)}
+.stat-value{font-size:28px;font-weight:700;color:var(--c-blue-dark)}
+.stat-label{font-size:12px;color:var(--text-s);margin-top:4px}
+.stat-icon{font-size:22px;margin-bottom:6px}
+
+/* Progress */
+.progress-bar-wrap{height:8px;background:var(--bg-gray);border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c-blue-light),var(--c-green));transition:width .5s ease}
+
+/* Task / Plan Table */
+.plan-table{width:100%;border-collapse:collapse;font-size:13px}
+.plan-table th{font-size:11px;font-weight:600;color:var(--text-s);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.plan-table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.plan-table tr:last-child td{border-bottom:none}
+.plan-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .2s}
+.plan-check.done{background:var(--c-green);border-color:var(--c-green);color:#fff}
+.plan-status-done{color:var(--c-green);font-weight:600}
+.plan-status-pending{color:var(--text-m)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:500;transition:all .2s}
+.btn-primary{background:var(--c-blue);color:#fff}
+.btn-primary:hover{background:var(--c-blue-dark)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text-p)}
+.btn-outline:hover{background:var(--bg-gray)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-icon{width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+
+/* Inputs */
+.input,.textarea,.select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;background:var(--bg-card);color:var(--text-p);transition:border-color .2s;outline:none}
+.input:focus,.textarea:focus,.select:focus{border-color:var(--c-blue-light)}
+.textarea{resize:vertical;min-height:80px}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7E80' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Form */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:13px;font-weight:500;color:var(--text-s);margin-bottom:5px}
+
+/* Tags */
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.tag-blue{background:#DFEBF2;color:var(--c-blue)}
+.tag-green{background:#E8EDE0;color:var(--c-green)}
+.tag-amber{background:#F5EED8;color:#A08030}
+.tag-gray{background:var(--bg-gray);color:var(--text-s)}
+
+/* Subject Tabs */
+.subject-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.subject-tab{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;background:var(--bg-gray);color:var(--text-s);transition:all .2s;cursor:pointer}
+.subject-tab.active{background:var(--c-blue);color:#fff}
+
+/* Calendar */
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.calendar-day{aspect-ratio:1;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--bg-gray);color:var(--text-s);cursor:pointer;transition:all .2s;position:relative}
+.calendar-day:hover{background:var(--bg-gray-light)}
+.calendar-day.checked{background:var(--c-blue);color:#fff}
+.calendar-day.today{border:2px solid var(--c-blue-light)}
+.calendar-label{font-size:10px;color:var(--text-m);text-align:center;padding:4px 0}
+
+/* Time Wheel Picker */
+.wheel-picker{display:flex;justify-content:center;gap:8px;margin:16px 0;position:relative}
+.wheel-col{width:80px;height:160px;overflow-y:auto;scroll-snap-type:y mandatory;-ms-overflow-style:none;scrollbar-width:none;position:relative}
+.wheel-col::-webkit-scrollbar{display:none}
+.wheel-col::before,.wheel-col::after{content:'';position:absolute;left:0;right:0;height:58px;z-index:2;pointer-events:none}
+.wheel-col::before{top:0;background:linear-gradient(180deg,var(--bg-card),transparent)}
+.wheel-col::after{bottom:0;background:linear-gradient(0deg,var(--bg-card),transparent)}
+.wheel-item{height:32px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-s);scroll-snap-align:center}
+.wheel-item.selected{color:var(--c-blue-dark);font-weight:600}
+.wheel-center{position:absolute;left:8px;right:8px;top:64px;height:32px;border-top:2px solid var(--c-blue-light);border-bottom:2px solid var(--c-blue-light);pointer-events:none;z-index:1}
+.wheel-unit{display:flex;align-items:center;font-size:18px;color:var(--text-s);align-self:center}
+
+/* Spinning Wheel (Roulette) */
+.roulette-wrap{text-align:center;margin-bottom:20px}
+.roulette-container{position:relative;width:220px;height:220px;margin:0 auto 12px}
+.roulette{width:100%;height:100%;border-radius:50%;position:relative;transition:transform 3s cubic-bezier(.17,.67,.32,1);border:4px solid var(--bg-card);box-shadow:var(--shadow-lg)}
+.roulette-pointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:18px solid var(--c-blue-dark);z-index:10}
+.roulette-center-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:var(--bg-card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:16px;z-index:5}
+.roulette-label{position:absolute;top:50%;left:50%;transform-origin:0 0;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+
+/* Flashcard */
+.flashcard{background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:28px 20px;text-align:center;min-height:200px;display:flex;flex-direction:column;justify-content:center;transition:all .3s;cursor:pointer;margin-bottom:14px}
+.flashcard.flipped{background:var(--bg-gray-light);border-color:var(--c-blue-light)}
+.flashcard-question{font-size:16px;font-weight:600;color:var(--c-blue-dark);line-height:1.7}
+.flashcard-hint{font-size:12px;color:var(--text-m);margin-top:10px}
+.flashcard-answer{font-size:15px;color:var(--text-p);line-height:1.7;margin-top:16px;display:none;white-space:pre-wrap}
+.flashcard.flipped .flashcard-answer{display:block}
+.flashcard.flipped .flashcard-hint{display:none}
+
+/* Timer */
+.timer-display{font-size:64px;font-weight:300;text-align:center;color:var(--c-blue-dark);font-variant-numeric:tabular-nums;letter-spacing:2px;margin:20px 0}
+.timer-controls{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.timer-presets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.timer-preset{padding:8px 16px;border-radius:20px;font-size:13px;background:var(--bg-gray);color:var(--text-s);transition:all .2s}
+.timer-preset.active{background:var(--c-blue);color:#fff}
+
+/* Table */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th,.table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.table th{font-weight:600;color:var(--text-s);font-size:12px;white-space:nowrap}
+.table tr:hover{background:var(--bg-gray-light)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c-blue-dark);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;z-index:300;opacity:0;visibility:hidden;transition:all .3s}
+.toast.show{opacity:1;visibility:visible}
+
+/* Empty */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-m)}
+.empty-state-icon{font-size:40px;margin-bottom:12px}
+.empty-state-text{font-size:14px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(58,62,66,.35);z-index:150;display:flex;align-items:flex-end;justify-content:center;opacity:0;visibility:hidden;transition:all .3s}
+.modal-overlay.show{opacity:1;visibility:visible}
+.modal{background:var(--bg-card);border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px 20px 32px;transform:translateY(100%);transition:transform .3s;position:relative}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:16px;color:var(--c-blue-dark)}
+.modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg-gray);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-s)}
+
+/* Photo upload */
+.photo-preview{width:100%;border-radius:var(--r);margin-top:8px;display:none}
+.photo-preview.show{display:block}
+.photo-btn-wrap{display:flex;gap:8px;margin-top:8px}
+
+/* Voice button */
+.voice-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:var(--r-sm);font-size:13px;background:var(--bg-gray);color:var(--text-s);transition:all .2s}
+.voice-btn.recording{background:var(--danger);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* Section score rows */
+.section-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.section-row input{flex:1;font-size:12px;padding:7px 10px}
+.section-row .section-acc{width:50px;font-size:12px;color:var(--text-s);text-align:center;flex-shrink:0}
+
+/* Chart legend */
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-s)}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* Misc */
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.gap-sm{display:flex;gap:8px}
+.mt-sm{margin-top:8px}.mt-md{margin-top:14px}
+.mb-sm{margin-bottom:8px}.mb-md{margin-bottom:14px}
+.text-center{text-align:center}
+.text-muted{color:var(--text-s);font-size:13px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.score-trend-up{color:var(--c-green)}.score-trend-down{color:var(--danger)}
+
+/* Responsive */
+@media(min-width:768px){
+  .sidebar{transform:translateX(0)}
+  .sidebar-overlay{display:none}
+  .topbar{padding-left:calc(var(--sidebar-w) + 24px)}
+  .menu-btn{display:none}
+  .main-wrap{margin-left:var(--sidebar-w)}
+  .page{padding:24px 32px}
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(min-width:1024px){
+  .page{max-width:900px}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">📚</div>
+    <div><div class="sidebar-title">luran的工作台</div><div class="sidebar-subtitle">国际中文教育 · 2026</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">概览</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard',this)"><span class="nav-icon">🏠</span>首页 Dashboard<span class="nav-dot"></span></div>
+      <div class="nav-item" data-page="daily-plan" onclick="navigateTo('daily-plan',this)"><span class="nav-icon">📋</span>每日计划</div>
+      <div class="nav-item" data-page="daily-review" onclick="navigateTo('daily-review',this)"><span class="nav-icon">🌙</span>每日复盘</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">公共课</div>
+      <div class="nav-item" data-page="english" onclick="navigateTo('english',this)"><span class="nav-icon">🇬🇧</span>英语学习</div>
+      <div class="nav-item" data-page="politics" onclick="navigateTo('politics',this)"><span class="nav-icon">📰</span>政治学习</div>
+      <div class="nav-item" data-page="politics-hot" onclick="navigateTo('politics-hot',this)"><span class="nav-icon">🔥</span>政治热点</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">专业课</div>
+      <div class="nav-item" data-page="course-354" onclick="navigateTo('course-354',this)"><span class="nav-icon">📖</span>354 汉语基础</div>
+      <div class="nav-item" data-page="course-445" onclick="navigateTo('course-445',this)"><span class="nav-icon">🌏</span>445 汉语国际教育基础</div>
+      <div class="nav-item" data-page="recite-checkin" onclick="navigateTo('recite-checkin',this)"><span class="nav-icon">✅</span>354&amp;445 背诵打卡</div>
+      <div class="nav-item" data-page="recite-quiz" onclick="navigateTo('recite-quiz',this)"><span class="nav-icon">🎴</span>354&amp;445 抽题背诵</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">工具</div>
+      <div class="nav-item" data-page="timer" onclick="navigateTo('timer',this)"><span class="nav-icon">⏱️</span>学习计时</div>
+      <div class="nav-item" data-page="mistakes" onclick="navigateTo('mistakes',this)"><span class="nav-icon">📝</span>错题记录</div>
+      <div class="nav-item" data-page="exam-analysis" onclick="navigateTo('exam-analysis',this)"><span class="nav-icon">📊</span>试卷分析</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">数据</div>
+      <div class="nav-item" data-page="stats" onclick="navigateTo('stats',this)"><span class="nav-icon">📈</span>学习数据</div>
+      <div class="nav-item" data-page="backup" onclick="navigateTo('backup',this)"><span class="nav-icon">💾</span>数据备份</div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">专注当下，功不唐捐</div>
+</aside>
+
+<!-- Main Content -->
+<div class="main-wrap">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbarTitle">首页 Dashboard</div>
+    <div class="topbar-tag" id="currentDate"></div>
+  </div>
+
+  <!-- Dashboard -->
+  <section class="page active" id="page-dashboard">
+    <div class="quote-card" id="dailyQuote"></div>
+    <div class="mood-card" id="moodCard"></div>
+    <div class="countdown-card" id="countdownCard"></div>
+    <div class="stats-grid" id="dashStats"></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">今日任务</div><span class="tag tag-gray" id="todayTaskCount">0/0</span></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="todayProgress" style="width:0%"></div></div>
+      <div id="todayTaskList" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title mb-md">📌 快捷入口</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="navigateTo('timer')">⏱️ 开始计时</button>
+        <button class="btn btn-outline btn-sm" onclick="navigateTo('recite-quiz')">🎴 抽题背诵</button>
+        <button class="btn btn-outline btn-sm" onclick="navigateTo('recite-checkin')">✅ 背诵打卡</button>
+        <button class="btn btn-outline btn-sm" onclick="navigateTo('daily-review')">🌙 每日复盘</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 每日计划 -->
+  <section class="page" id="page-daily-plan">
+    <div class="page-header"><h1 class="page-title">每日计划</h1><p class="page-desc">规划今天的学习任务，做完一项手动勾选</p></div>
+    <div class="card">
+      <div class="flex-between mb-md"><span class="card-title">今日计划表</span><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ 添加任务</button></div>
+      <div class="table-wrap">
+        <table class="plan-table" id="planTable">
+          <thead><tr><th></th><th>科目</th><th>任务</th><th>时长</th><th>状态</th><th></th></tr></thead>
+          <tbody id="planTaskList"></tbody>
+        </table>
+      </div>
+      <div id="planEmpty"></div>
+    </div>
+  </section>
+
+  <!-- 英语学习 -->
+  <section class="page" id="page-english">
+    <div class="page-header"><h1 class="page-title">英语学习</h1><p class="page-desc">单词、阅读、翻译、作文——记录你的英语备考</p></div>
+    <div class="card"><div class="flex-between mb-md"><span class="card-title">学习笔记</span><button class="btn btn-primary btn-sm" onclick="openNoteModal('english')">+ 添加记录</button></div><div id="englishNotesList"></div></div>
+  </section>
+
+  <!-- 政治学习 -->
+  <section class="page" id="page-politics">
+    <div class="page-header"><h1 class="page-title">政治学习</h1><p class="page-desc">马原、毛中特、史纲、思修、时政——系统整理</p></div>
+    <div class="card"><div class="flex-between mb-md"><span class="card-title">学习笔记</span><button class="btn btn-primary btn-sm" onclick="openNoteModal('politics')">+ 添加记录</button></div><div id="politicsNotesList"></div></div>
+  </section>
+
+  <!-- 354 -->
+  <section class="page" id="page-course-354">
+    <div class="page-header"><h1 class="page-title">354 汉语基础</h1><p class="page-desc">现代汉语、古代汉语、语言学纲要</p></div>
+    <div class="card"><div class="flex-between mb-md"><span class="card-title">知识笔记</span><button class="btn btn-primary btn-sm" onclick="openNoteModal('course354')">+ 添加记录</button></div><div id="course354NotesList"></div></div>
+  </section>
+
+  <!-- 445 -->
+  <section class="page" id="page-course-445">
+    <div class="page-header"><h1 class="page-title">445 汉语国际教育基础</h1><p class="page-desc">中外文化、跨文化交际、对外汉语教学理论</p></div>
+    <div class="card">
+      <div class="card-title mb-sm">📚 参考书目</div>
+      <div class="book-grid" id="bookGrid445"></div>
+    </div>
+    <div class="card"><div class="flex-between mb-md"><span class="card-title">知识笔记</span><button class="btn btn-primary btn-sm" onclick="openNoteModal('course445')">+ 添加记录</button></div><div id="course445NotesList"></div></div>
+  </section>
+
+  <!-- 背诵打卡 -->
+  <section class="page" id="page-recite-checkin">
+    <div class="page-header"><h1 class="page-title">背诵打卡</h1><p class="page-desc">四科目分科打卡，记录每日学习时长</p></div>
+    <div class="subject-tabs" id="checkinTabs">
+      <div class="subject-tab active" data-subject="英语" onclick="switchCheckinTab('英语',this)">🇬🇧 英语</div>
+      <div class="subject-tab" data-subject="政治" onclick="switchCheckinTab('政治',this)">📰 政治</div>
+      <div class="subject-tab" data-subject="354汉语基础" onclick="switchCheckinTab('354汉语基础',this)">📖 354</div>
+      <div class="subject-tab" data-subject="445汉语国际教育基础" onclick="switchCheckinTab('445汉语国际教育基础',this)">🌏 445</div>
+    </div>
+    <div class="card">
+      <div class="flex-between mb-md"><span class="card-title" id="checkinMonthTitle">本月打卡日历</span><span class="text-muted" id="checkinMonthSummary"></span></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"><div class="calendar-label">日</div><div class="calendar-label">一</div><div class="calendar-label">二</div><div class="calendar-label">三</div><div class="calendar-label">四</div><div class="calendar-label">五</div><div class="calendar-label">六</div></div>
+      <div class="calendar-grid" id="checkinCalendar"></div>
+    </div>
+    <div class="card">
+      <div class="card-title mb-md">📊 月度学习时长统计</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap">
+        <div id="pieChartWrap" style="text-align:center"></div>
+        <div id="pieLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title mb-md">📈 周期统计</div>
+      <div class="flex-between mb-md" style="gap:8px">
+        <select class="select" id="piePeriod" style="width:auto;flex:1;max-width:200px" onchange="renderPieChart()">
+          <option value="week">最近一周</option>
+          <option value="month">本月</option>
+        </select>
+      </div>
+      <div id="pieStatsSummary"></div>
+    </div>
+  </section>
+
+  <!-- 抽题背诵 -->
+  <section class="page" id="page-recite-quiz">
+    <div class="page-header"><h1 class="page-title">抽题背诵</h1><p class="page-desc">354 和 445 分别抽签，每天练一练</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="roulette-wrap">
+        <div class="card-title mb-sm" style="text-align:center">📖 354 汉语基础</div>
+        <div class="roulette-container">
+          <div class="roulette-pointer"></div>
+          <div class="roulette" id="wheel354" onclick="spinWheel('354')"></div>
+          <div class="roulette-center-dot">🎲</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="spinWheel('354')">旋转抽题</button>
+      </div>
+      <div class="roulette-wrap">
+        <div class="card-title mb-sm" style="text-align:center">🌏 445 汉语国际教育基础</div>
+        <div class="roulette-container">
+          <div class="roulette-pointer"></div>
+          <div class="roulette" id="wheel445" onclick="spinWheel('445')"></div>
+          <div class="roulette-center-dot">🎲</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="spinWheel('445')">旋转抽题</button>
+      </div>
+    </div>
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-question" id="flashcardQuestion">点击上方转盘抽取题目</div>
+      <div class="flashcard-hint" style="display:none">点击卡片翻转查看答案</div>
+      <div class="flashcard-answer" id="flashcardAnswer"></div>
+    </div>
+    <div class="flex-between mt-sm"><button class="btn btn-outline btn-sm" onclick="openReciteModal()">+ 添加题目</button><span class="text-muted" id="quizTotal">题库：0 题</span></div>
+  </section>
+
+  <!-- 学习计时 -->
+  <section class="page" id="page-timer">
+    <div class="page-header"><h1 class="page-title">学习计时</h1><p class="page-desc">专注当下，每次只做一件事</p></div>
+    <div class="card text-center">
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div class="timer-presets mb-md"><button class="timer-preset active" onclick="setTimer(25,this)">25分钟</button><button class="timer-preset" onclick="setTimer(45,this)">45分钟</button><button class="timer-preset" onclick="setTimer(60,this)">60分钟</button><button class="timer-preset" onclick="setTimer(90,this)">90分钟</button></div>
+      <div class="timer-controls"><button class="btn btn-primary" id="timerStartBtn" onclick="toggleTimer()">▶ 开始</button><button class="btn btn-outline" onclick="resetTimer()">↺ 重置</button></div>
+      <div class="text-muted mt-md" id="timerSessions">今日专注：0 次</div>
+    </div>
+    <div class="card"><div class="card-title mb-sm">今日学习记录</div><div id="timerLog"></div></div>
+  </section>
+
+  <!-- 错题记录 -->
+  <section class="page" id="page-mistakes">
+    <div class="page-header"><h1 class="page-title">错题记录</h1><p class="page-desc">拍照记录、语音输入，让错题不再被遗忘</p></div>
+    <div class="flex-between mb-md">
+      <select class="select" id="mistakeFilter" style="width:auto;flex:1;max-width:180px" onchange="renderMistakes()"><option value="all">全部科目</option><option value="英语">英语</option><option value="政治">政治</option><option value="354汉语基础">354汉语基础</option><option value="445汉语国际教育基础">445汉语国际教育基础</option></select>
+      <button class="btn btn-primary btn-sm" onclick="openMistakeModal()">+ 添加错题</button>
+    </div>
+    <div id="mistakesList"></div>
+  </section>
+
+  <!-- 试卷分析 -->
+  <section class="page" id="page-exam-analysis">
+    <div class="page-header"><h1 class="page-title">试卷分析</h1><p class="page-desc">成绩趋势折线图、板块正确率、错题与遗忘知识点</p></div>
+    <div class="flex-between mb-md">
+      <select class="select" id="examFilter" style="width:auto;flex:1;max-width:180px" onchange="renderExams()"><option value="all">全部科目</option><option value="英语">英语</option><option value="政治">政治</option><option value="354汉语基础">354汉语基础</option><option value="445汉语国际教育基础">445汉语国际教育基础</option></select>
+      <button class="btn btn-primary btn-sm" onclick="openExamModal()">+ 添加分析</button>
+    </div>
+    <div class="card" id="examChartCard">
+      <div class="card-title mb-md">📈 成绩趋势</div>
+      <div id="examLineChart" style="text-align:center;overflow-x:auto"></div>
+    </div>
+    <div id="examList"></div>
+  </section>
+
+  <!-- 政治热点 -->
+  <section class="page" id="page-politics-hot">
+    <div class="page-header"><h1 class="page-title">政治热点</h1><p class="page-desc">汇聚时政要闻与考点关联</p></div>
+    <div class="flex-between mb-md"><span class="text-muted">热点事件</span><button class="btn btn-primary btn-sm" onclick="openHotModal()">+ 添加热点</button></div>
+    <div id="hotList"></div>
+  </section>
+
+  <!-- 每日复盘 -->
+  <section class="page" id="page-daily-review">
+    <div class="page-header"><h1 class="page-title">每日复盘</h1><p class="page-desc">回顾今天，计划明天</p></div>
+    <div class="card">
+      <div class="card-title mb-md">今日复盘</div>
+      <div class="form-group"><label class="form-label">今天完成了什么？</label><textarea class="textarea" id="reviewDone" placeholder="列举今天完成的学习任务..."></textarea></div>
+      <div class="form-group"><label class="form-label">有什么收获或反思？</label><textarea class="textarea" id="reviewReflect" placeholder="今天学到的新知识、发现的问题..."></textarea></div>
+      <div class="form-group"><label class="form-label">明天的计划</label><textarea class="textarea" id="reviewPlan" placeholder="明天重点做什么..."></textarea></div>
+      <div class="form-group"><label class="form-label">给自己的心情评分</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="moodSelector"><button class="btn btn-outline btn-sm" data-mood="5" onclick="setMood(5,this)">😊 很好</button><button class="btn btn-outline btn-sm" data-mood="4" onclick="setMood(4,this)">🙂 不错</button><button class="btn btn-outline btn-sm" data-mood="3" onclick="setMood(3,this)">😐 一般</button><button class="btn btn-outline btn-sm" data-mood="2" onclick="setMood(2,this)">😕 有点累</button><button class="btn btn-outline btn-sm" data-mood="1" onclick="setMood(1,this)">😞 不太好</button></div></div>
+      <button class="btn btn-primary btn-block" onclick="saveReview()">保存复盘</button>
+    </div>
+    <div class="card"><div class="card-title mb-md">历史复盘</div><div id="reviewHistory"></div></div>
+  </section>
+
+  <!-- 学习数据 -->
+  <section class="page" id="page-stats">
+    <div class="page-header"><h1 class="page-title">学习数据</h1><p class="page-desc">用数据感知自己的进步</p></div>
+    <div class="stats-grid" id="statsOverview"></div>
+    <div class="card"><div class="card-title mb-md">近7天学习时长</div><div id="weeklyChart" style="display:flex;align-items:flex-end;gap:8px;height:150px;padding:10px 0"></div></div>
+  </section>
+
+  <!-- 数据备份 -->
+  <section class="page" id="page-backup">
+    <div class="page-header"><h1 class="page-title">数据备份</h1><p class="page-desc">安全地保存和恢复你的学习数据</p></div>
+    <div class="card"><div class="card-title mb-md">导出数据</div><p class="text-muted mb-sm">将所有学习数据导出为 JSON 文件，保存到电脑或云盘</p><button class="btn btn-primary" onclick="exportData()">📥 导出备份文件</button></div>
+    <div class="card"><div class="card-title mb-md">导入数据</div><p class="text-muted mb-sm">从之前导出的备份文件恢复数据</p><input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"><button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📤 选择备份文件</button></div>
+
+    <div class="card"><div class="card-title mb-md">📁 学习资料管理</div><p class="text-muted mb-sm">上传你的电子学习资料（PDF、文档、笔记等），选择归入的板块</p>
+      <input type="file" id="learningFileInput" style="display:none" onchange="handleFileSelect(event)">
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('learningFileInput').click()">📎 上传学习资料</button>
+      <div class="text-muted" style="font-size:11px;margin-top:6px">支持 PDF、Word、Excel、PPT、图片、文本文件 · 单文件建议不超过 10MB</div>
+      <div id="learningFilesList" style="margin-top:12px"></div>
+    </div>
+    <div class="card"><div class="card-title mb-md">清除数据</div><p class="text-muted mb-sm">清除所有本地数据，此操作不可撤销</p><button class="btn btn-danger btn-sm" onclick="clearAllData()">⚠️ 清除所有数据</button></div>
+  </section>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ====== Task Modal ====== -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-title">添加任务</div>
+    <div class="form-group"><label class="form-label">任务名称</label><input class="input" id="taskInput" placeholder="例如：背50个英语单词"></div>
+    <div class="form-group"><label class="form-label">科目</label><select class="select" id="taskSubject"><option value="英语">英语</option><option value="政治">政治</option><option value="354汉语基础">354汉语基础</option><option value="445汉语国际教育基础">445汉语国际教育基础</option><option value="其他">其他</option></select></div>
+    <div class="form-group"><label class="form-label">预计时长（分钟）</label><input class="input" type="number" id="taskDuration" placeholder="60" min="1" value="60"></div>
+    <button class="btn btn-primary btn-block" onclick="saveTask()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('taskModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Note Modal ====== -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-title">添加学习记录</div>
+    <div class="form-group"><label class="form-label">标题</label><input class="input" id="noteTitle" placeholder="例如：现代汉语·语音章节笔记"></div>
+    <div class="form-group"><label class="form-label">内容</label><textarea class="textarea" id="noteContent" placeholder="记录知识点、心得..."></textarea></div>
+    <input type="hidden" id="noteSubject">
+    <button class="btn btn-primary btn-block" onclick="saveNote()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('noteModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Check-in Modal (Time Wheel) ====== -->
+<div class="modal-overlay" id="checkinModal">
+  <div class="modal">
+    <div class="modal-title" id="checkinModalTitle">打卡</div>
+    <div class="text-center mb-md" id="checkinDateLabel"></div>
+    <div class="form-group">
+      <label class="form-label text-center" style="display:block">选择学习时长</label>
+      <div class="wheel-picker">
+        <div class="wheel-col" id="hourWheel"></div>
+        <div class="wheel-center"></div>
+        <span class="wheel-unit">小时</span>
+        <div class="wheel-col" id="halfHourWheel"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveCheckin()">确认打卡</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('checkinModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Mistake Modal (Photo + Voice) ====== -->
+<div class="modal-overlay" id="mistakeModal">
+  <div class="modal">
+    <div class="modal-title">添加错题</div>
+    <div class="form-group"><label class="form-label">科目</label><select class="select" id="mistakeSubjectSelect"><option value="英语">英语</option><option value="政治">政治</option><option value="354汉语基础">354汉语基础</option><option value="445汉语国际教育基础">445汉语国际教育基础</option></select></div>
+    <div class="form-group"><label class="form-label">题目 / 来源</label><input class="input" id="mistakeSource" placeholder="例如：2024年真题·阅读第3题"></div>
+    <div class="form-group">
+      <label class="form-label">原题摘要</label>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <textarea class="textarea" id="mistakeQuestion" placeholder="记录题目内容或拍照..." style="flex:1"></textarea>
+      </div>
+      <div class="photo-btn-wrap mt-sm">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('mistakePhoto').click()">📷 拍照</button>
+        <button class="voice-btn btn-sm" id="voiceBtnQuestion" onclick="toggleVoice('mistakeQuestion',this)">🎙️ 语音输入</button>
+      </div>
+      <input type="file" id="mistakePhoto" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)">
+      <img class="photo-preview" id="mistakePhotoPreview">
+    </div>
+    <div class="form-group">
+      <label class="form-label">错误原因</label>
+      <textarea class="textarea" id="mistakeReason" placeholder="分析为什么会错..."></textarea>
+      <div class="mt-sm"><button class="voice-btn btn-sm" id="voiceBtnReason" onclick="toggleVoice('mistakeReason',this)">🎙️ 语音输入</button></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">正确思路</label>
+      <textarea class="textarea" id="mistakeCorrect" placeholder="正确的解法或答案..."></textarea>
+      <div class="mt-sm"><button class="voice-btn btn-sm" id="voiceBtnCorrect" onclick="toggleVoice('mistakeCorrect',this)">🎙️ 语音输入</button></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveMistake()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('mistakeModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Exam Modal ====== -->
+<div class="modal-overlay" id="examModal">
+  <div class="modal">
+    <div class="modal-title">添加试卷分析</div>
+    <div class="form-group"><label class="form-label">试卷名称</label><input class="input" id="examName" placeholder="例如：2024年英语一真题"></div>
+    <div class="form-group"><label class="form-label">科目</label><select class="select" id="examSubjectSelect"><option value="英语">英语</option><option value="政治">政治</option><option value="354汉语基础">354汉语基础</option><option value="445汉语国际教育基础">445汉语国际教育基础</option></select></div>
+    <div class="form-group"><label class="form-label">做题日期</label><input class="input" type="date" id="examDate"></div>
+    <div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">得分</label><input class="input" type="number" id="examScore" placeholder="得分" min="0"></div><div class="form-group" style="flex:1"><label class="form-label">满分</label><input class="input" type="number" id="examTotal" placeholder="满分" min="1" value="100"></div></div>
+    <div class="form-group"><label class="form-label">做题时长（分钟）</label><input class="input" type="number" id="examTime" placeholder="120" min="1"></div>
+    <div class="form-group">
+      <div class="flex-between"><label class="form-label" style="margin-bottom:0">各板块得分</label><button class="btn btn-outline btn-sm" onclick="addSectionRow()">+ 添加板块</button></div>
+      <div id="examSections" style="margin-top:8px"></div>
+    </div>
+    <div class="form-group"><label class="form-label">错题备注</label><textarea class="textarea" id="examMistakes" placeholder="记录做错的题目和原因..."></textarea></div>
+    <div class="form-group"><label class="form-label">遗忘的知识点</label><textarea class="textarea" id="examForgotten" placeholder="记录做题时想不起来的知识点..."></textarea></div>
+    <div class="form-group"><label class="form-label">总结</label><textarea class="textarea" id="examSummary" placeholder="薄弱环节和改进方向..."></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveExam()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('examModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Hot Modal ====== -->
+<div class="modal-overlay" id="hotModal">
+  <div class="modal">
+    <div class="modal-title">添加热点事件</div>
+    <div class="form-group"><label class="form-label">事件标题</label><input class="input" id="hotTitle" placeholder="例如：二十届三中全会"></div>
+    <div class="form-group"><label class="form-label">关联考点</label><input class="input" id="hotKeypoint" placeholder="例如：毛中特·全面深化改革"></div>
+    <div class="form-group"><label class="form-label">事件摘要</label><textarea class="textarea" id="hotSummary" placeholder="事件的核心内容和考点分析..."></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveHot()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('hotModal')">取消</button>
+  </div>
+</div>
+
+<!-- ====== Recite Question Modal ====== -->
+<div class="modal-overlay" id="reciteModal">
+  <div class="modal">
+    <div class="modal-title">添加背诵题目</div>
+    <div class="form-group"><label class="form-label">科目</label><select class="select" id="reciteSubjectSelect"><option value="354">354 汉语基础</option><option value="445">445 汉语国际教育基础</option></select></div>
+    <div class="form-group"><label class="form-label">题目</label><textarea class="textarea" id="reciteQuestion" placeholder="例如：简述现代汉语语音的特点"></textarea></div>
+    <div class="form-group"><label class="form-label">答案</label><textarea class="textarea" id="reciteAnswer" placeholder="完整的答案内容..."></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveReciteQuestion()">保存</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('reciteModal')">取消</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="streakModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">📅 每日学习时长</div>
+    <canvas id="streakChart" width="460" height="200" style="width:100%;height:200px;margin-bottom:12px;border-radius:8px;background:var(--cream)"></canvas>
+    <div id="streakDailyList" style="max-height:40vh;overflow-y:auto"></div>
+    <button class="btn btn-outline btn-block mt-sm" onclick="hideModal('streakModal')">关闭</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="fileSectionModal">
+  <div class="modal">
+    <div class="modal-title">📎 添加到哪个板块？</div>
+    <div class="text-muted mb-md" style="font-size:13px" id="importFileName"></div>
+    <div class="form-group"><label class="form-label">选择目标板块</label><select class="select" id="fileSectionSelect">
+      <option value="英语学习">🇬🇧 英语学习</option><option value="政治学习">📰 政治学习</option>
+      <option value="354汉语基础">📖 354 汉语基础</option><option value="445汉语国际教育基础">🌏 445 汉语国际教育基础</option>
+      <option value="背诵打卡">✅ 背诵打卡</option><option value="抽题背诵">🎴 抽题背诵</option>
+      <option value="错题记录">📝 错题记录</option><option value="试卷分析">📊 试卷分析</option>
+      <option value="政治热点">🔥 政治热点</option><option value="每日复盘">🌙 每日复盘</option><option value="其他资料">📂 其他资料</option>
+    </select></div>
+    <button class="btn btn-primary btn-block" onclick="confirmFileImport()">确认导入</button>
+    <button class="btn btn-outline btn-block mt-sm" onclick="cancelFileImport()">取消</button>
+  </div>
+</div>
+
+<script>
+/* ===== Data Store ===== */
+const KEY='kaoyan_workbench_v2';
+function S(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+function P(key,val){const s=S();s[key]=val;localStorage.setItem(KEY,JSON.stringify(s))}
+function G(key,def){const s=S();return s[key]!==undefined?s[key]:def}
+function unshift(key,item){const a=G(key,[]);a.unshift(item);P(key,a);return a}
+
+/* ===== Page Titles ===== */
+const pageTitles={dashboard:'首页 Dashboard','daily-plan':'每日计划','english':'英语学习','politics':'政治学习','course-354':'354 汉语基础','course-445':'445 汉语国际教育基础','recite-checkin':'背诵打卡','recite-quiz':'抽题背诵','timer':'学习计时','mistakes':'错题记录','exam-analysis':'试卷分析','politics-hot':'政治热点','daily-review':'每日复盘',stats:'学习数据',backup:'数据备份'};
+let currentPage='dashboard';
+let timerInterval=null,timerSec=25*60,timerRunning=false,timerTotal=25*60,timerStartSec=25*60;
+let selectedMood=0,currentCheckinSubject='英语',selectedCheckinDate='';
+let currentPhotoData='';
+let wheelRotations={354:0,445:0};
+let voiceRecognition=null,voiceTarget='',voiceBtnEl=null;
+
+/* ===== Init ===== */
+function init(){
+  document.getElementById('currentDate').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
+  renderDashboard();
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function navigateTo(page,el){
+  currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');else document.querySelector('[data-page="'+page+'"]')?.classList.add('active');
+  document.getElementById('topbarTitle').textContent=pageTitles[page]||'';
+  closeSidebar();window.scrollTo(0,0);
+  if(page==='dashboard')renderDashboard();
+  if(page==='daily-plan')renderDailyPlan();
+  if(page==='english')renderNotes('englishNotes','englishNotesList');
+  if(page==='politics')renderNotes('politicsNotes','politicsNotesList');
+  if(page==='course-354')renderNotes('course354Notes','course354NotesList');
+  if(page==='course-445'){renderNotes('course445Notes','course445NotesList');renderBookGrid();}
+  if(page==='recite-checkin'){renderCheckinCalendar();renderPieChart();}
+  if(page==='recite-quiz'){renderQuiz();renderWheels();}
+  if(page==='timer')renderTimerLog();
+  if(page==='mistakes')renderMistakes();
+  if(page==='exam-analysis')renderExams();
+  if(page==='politics-hot')renderHot();
+  if(page==='daily-review')renderReview();
+  if(page==='stats')renderStats();
+  if(page==='backup')renderLearningFiles();
+}
+
+/* ===== Toast & Modal ===== */
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function showModal(id){document.getElementById(id).classList.add('show')}
+function hideModal(id){document.getElementById(id).classList.remove('show')}
+
+/* ===== Date helpers ===== */
+function fmtDate(d){return d.toISOString().slice(0,10)}
+function todayStr(){return fmtDate(new Date())}
+
+/* ===== Quotes ===== */
+const quotes=[
+  {text:'道阻且长，行则将至。',author:'《荀子·修身》'},
+  {text:'博观而约取，厚积而薄发。',author:'苏轼'},
+  {text:'不经一番寒彻骨，怎得梅花扑鼻香。',author:'黄檗禅师'},
+  {text:'长风破浪会有时，直挂云帆济沧海。',author:'李白'},
+  {text:'路漫漫其修远兮，吾将上下而求索。',author:'屈原'},
+  {text:'锲而不舍，金石可镂。',author:'《荀子·劝学》'},
+  {text:'读书破万卷，下笔如有神。',author:'杜甫'},
+  {text:'业精于勤，荒于嬉；行成于思，毁于随。',author:'韩愈'},
+  {text:'纸上得来终觉浅，绝知此事要躬行。',author:'陆游'},
+  {text:'志当存高远。',author:'诸葛亮'},
+  {text:'千里之行，始于足下。',author:'老子'},
+  {text:'为学正如撑上水船，一篙不可放缓。',author:'朱熹'},
+  {text:'非淡泊无以明志，非宁静无以致远。',author:'诸葛亮'},
+  {text:'十年磨一剑，霜刃未曾试。',author:'贾岛'},
+  {text:'大鹏一日同风起，扶摇直上九万里。',author:'李白'},
+  {text:'宝剑锋从磨砺出，梅花香自苦寒来。',author:'《警世贤文》'},
+  {text:'书山有路勤为径，学海无涯苦作舟。',author:'韩愈'},
+  {text:'盛年不重来，一日难再晨。及时当勉励，岁月不待人。',author:'陶渊明'},
+  {text:'莫等闲，白了少年头，空悲切。',author:'岳飞'},
+  {text:'天行健，君子以自强不息。',author:'《周易》'},
+  {text:'千淘万漉虽辛苦，吹尽狂沙始到金。',author:'刘禹锡'},
+  {text:'古之立大事者，不惟有超世之才，亦必有坚忍不拔之志。',author:'苏轼'},
+  {text:'学而不思则罔，思而不学则殆。',author:'《论语》'},
+  {text:'三更灯火五更鸡，正是男儿读书时。',author:'颜真卿'},
+  {text:'欲穷千里目，更上一层楼。',author:'王之涣'},
+  {text:'博学之，审问之，慎思之，明辨之，笃行之。',author:'《中庸》'},
+  {text:'绳锯木断，水滴石穿。',author:'罗大经'},
+  {text:'不积跬步，无以至千里；不积小流，无以成江海。',author:'《荀子》'},
+  {text:'天下事有难易乎？为之，则难者亦易矣。',author:'彭端淑'},
+  {text:'学如逆水行舟，不进则退。',author:'《增广贤文》'},
+  {text:'合抱之木，生于毫末；九层之台，起于累土。',author:'老子'},
+  {text:'有志者，事竟成，破釜沉舟，百二秦关终属楚。',author:'蒲松龄'},
+  {text:'苦心人，天不负，卧薪尝胆，三千越甲可吞吴。',author:'蒲松龄'},
+  {text:'山重水复疑无路，柳暗花明又一村。',author:'陆游'},
+  {text:'问渠那得清如许，为有源头活水来。',author:'朱熹'},
+  {text:'熟读唐诗三百首，不会作诗也会吟。',author:'孙洙'},
+  {text:'少年易老学难成，一寸光阴不可轻。',author:'朱熹'},
+  {text:'人生在勤，不索何获。',author:'张衡'},
+  {text:'黑发不知勤学早，白首方悔读书迟。',author:'颜真卿'},
+  {text:'旧书不厌百回读，熟读深思子自知。',author:'苏轼'},
+  {text:'君子之学必好问，问与学，相辅而行者也。',author:'刘开'},
+  {text:'学以致用，知行合一。',author:'王阳明'},
+  {text:'知不足，然后能自反也；知困，然后能自强也。',author:'《礼记》'},
+  {text:'日日行，不怕千万里；常常做，不怕千万事。',author:'《格言联璧》'},
+  {text:'不飞则已，一飞冲天；不鸣则已，一鸣惊人。',author:'司马迁'},
+  {text:'凡事预则立，不预则废。',author:'《中庸》'},
+  {text:'温故而知新，可以为师矣。',author:'《论语》'},
+  {text:'梅花优于香，桃花优于色。',author:'《格言联璧》'},
+  {text:'志之所趋，无远弗届，穷山距海，不能限也。',author:'《格言联璧》'},
+  {text:'以中有足乐者，不知口体之奉不若人也。',author:'宋濂'},
+  {text:'泰山不让土壤，故能成其大；河海不择细流，故能就其深。',author:'李斯'},
+  {text:'积土成山，风雨兴焉；积水成渊，蛟龙生焉。',author:'《荀子》'},
+  {text:'它山之石，可以攻玉。',author:'《诗经》'},
+  {text:'敏而好学，不耻下问。',author:'《论语》'},
+  {text:'朝闻道，夕死可矣。',author:'《论语》'},
+  {text:'吾生也有涯，而知也无涯。',author:'庄子'},
+  {text:'工欲善其事，必先利其器。',author:'《论语》'},
+  {text:'尽信书，则不如无书。',author:'孟子'},
+  {text:'取法乎上，仅得其中；取法乎中，仅得其下。',author:'唐太宗'},
+  {text:'笨鸟先飞早入林。',author:'谚语'},
+  {text:'只要功夫深，铁杵磨成针。',author:'祝穆'},
+  {text:'冰冻三尺，非一日之寒。',author:'王充'},
+  {text:'学海无涯勤是岸，云程有路志为梯。',author:'谚语'},
+  {text:'勤奋是你生命的密码，能译出一部壮丽的史诗。',author:'萧伯纳'},
+  {text:'向着月亮出发吧，即使没能到达，你也将置身于群星之中。',author:'莱斯·布朗'},
+  {text:'今天所有的努力，都是未来惊喜的伏笔。',author:''},
+  {text:'你的负担将变成礼物，你受的苦将照亮你的路。',author:'泰戈尔'},
+  {text:'每一个不曾起舞的日子，都是对生命的辜负。',author:'尼采'},
+  {text:'且视他人之疑目如盏盏鬼火，大胆去走你的夜路。',author:'史铁生'},
+  {text:'煎和熬都是变美味的方式，加油也是。',author:''},
+  {text:'慢慢来，比较快。',author:''},
+  {text:'你不是在等待暴风雨过去，而是在学习在雨中起舞。',author:''},
+  {text:'熬过无人问津的日子，才能拥抱诗和远方。',author:''},
+  {text:'星光不问赶路人，时光不负有心人。',author:''},
+  {text:'那些你独自努力的时光，终会让你变成闪闪发光的人。',author:''},
+  {text:'当你想放弃的时候，想想当初为什么开始。',author:''},
+  {text:'人生没有白走的路，每一步都算数。',author:'李宗盛'},
+  {text:'乾坤未定，你我皆是黑马。',author:''},
+  {text:'来得及，考得上，你可以。',author:''},
+  {text:'最慢的步伐不是跬步，而是徘徊；最快的脚步不是冲刺，而是坚持。',author:''},
+  {text:'你不一定逆风翻盘，但请一定向阳而生。',author:''},
+  {text:'半山腰太挤了，你应该去山顶看看。',author:''},
+  {text:'好运藏在努力里。',author:''},
+  {text:'你背单词时，阿拉斯加的鳕鱼正跃出水面；你算数学时，太平洋彼岸的海鸥拂过城市上空。那些你觉得看不到的风景，终将遇见。',author:''},
+  {text:'当下每一次想要努力的念头，都有可能是未来的你在向现在的你求救。',author:''},
+  {text:'你只管努力，剩下的交给时间。',author:''},
+  {text:'凡有所学，皆成性格。',author:'培根'},
+  {text:'自律即自由。',author:'康德'},
+  {text:'每一次想努力的念头，都是未来的你向自己发出的求救信号。',author:''},
+  {text:'如果这世界上真有奇迹，那只是努力的另一个名字。',author:'尼采'},
+  {text:'所谓的光辉岁月，并不是闪耀的日子，而是无人问津时，你对梦想的偏执。',author:''},
+  {text:'看不清未来时，就比别人坚持久一点。',author:''},
+  {text:'每一个优秀的人，都有一段沉默的时光。',author:''},
+  {text:'你要悄悄拔尖，然后惊艳所有人。',author:''},
+  {text:'既然选择了远方，便只顾风雨兼程。',author:'汪国真'},
+  {text:'没有横空出世的幸运，只有不为人知的努力。',author:''},
+  {text:'你的坚持，终将美好。',author:''},
+  {text:'向前走，天总会亮。',author:''},
+  {text:'不怕万人阻挡，只怕自己投降。',author:''},
+  {text:'等风来，不如追风去。',author:''},
+  {text:'将来的你，一定会感谢现在拼命的自己。',author:''},
+  {text:'你读过的书，终将成为脚下的路。',author:''},
+  {text:'但行好事，莫问前程。',author:'《增广贤文》'},
+  {text:'今天翻的书，就是明天数的钱。',author:''},
+  {text:'努力只能及格，拼命才能优秀。',author:''},
+  {text:'世界不曾亏欠每一个努力的人。',author:''},
+  {text:'别在最好的年纪，辜负最好的自己。',author:''},
+  {text:'哪有那么多天赋异禀，优秀的人都在孤独地翻山越岭。',author:''},
+  {text:'放弃不难，但坚持一定很酷。',author:'东野圭吾'},
+  {text:'人一能之，己百之；人十能之，己千之。',author:'《中庸》'},
+  {text:'为者常成，行者常至。',author:'《晏子春秋》'},
+  {text:'日拱一卒，功不唐捐。',author:''},
+  {text:'流水不争先，争的是滔滔不绝。',author:'老子'},
+  {text:'踏实一些，不要着急，你想要的，岁月都会给你。',author:''},
+  {text:'每一个你讨厌的现在，都有一个不够努力的曾经。',author:''},
+  {text:'努力的意义是，以后的日子里，放眼望去，全都是自己喜欢的人和事。',author:''},
+];
+
+function renderDailyQuote(){
+  const now=new Date();const startOfYear=new Date(now.getFullYear(),0,0);
+  const dayOfYear=Math.floor((now-startOfYear)/86400000);
+  const idx=dayOfYear%quotes.length;const q=quotes[idx];
+  const y=now.getFullYear();const m=now.getMonth()+1;const d=now.getDate();
+  const weekDays=['日','一','二','三','四','五','六'];const wd=weekDays[now.getDay()];
+  document.getElementById('dailyQuote').innerHTML=`
+    <div class="quote-text">${q.text}</div>
+    ${q.author?`<div class="quote-author">—— ${q.author}</div>`:''}
+    <div class="quote-date">${y}年${m}月${d}日 · 星期${wd}</div>`;
+}
+
+/* Mood Card */
+const moods=[{key:'happy',emoji:'😊',label:'开心'},{key:'energy',emoji:'⚡',label:'活力'},{key:'power',emoji:'🌱',label:'有劲儿'},{key:'study',emoji:'📚',label:'想学'}];
+function renderMoodCard(){
+  const moodData=G('mood_'+todayStr(),{mood:'',note:''});
+  let moodBtns='';
+  moods.forEach(m=>{
+    moodBtns+=`<button class="mood-btn${moodData.mood===m.key?' active':''}" data-mood="${m.key}" onclick="setMood('${m.key}')"><span class="mood-emoji">${m.emoji}</span><span class="mood-txt">${m.label}</span></button>`;
+  });
+  document.getElementById('moodCard').innerHTML=`
+    <span class="mood-label">📝 今日状态</span>
+    <div class="mood-options">${moodBtns}</div>
+    <input class="mood-note" id="moodNote" placeholder="写点今天的小感受…" value="${moodData.note.replace(/"/g,'&quot;')}" onblur="saveMoodNote()" maxlength="80">
+  `;
+}
+function setMood(key){
+  const moodData=G('mood_'+todayStr(),{mood:'',note:''});
+  moodData.mood=moodData.mood===key?'':key;
+  P('mood_'+todayStr(),moodData);
+  renderMoodCard();
+}
+function saveMoodNote(){
+  const note=document.getElementById('moodNote').value.trim();
+  const moodData=G('mood_'+todayStr(),{mood:'',note:''});
+  moodData.note=note;
+  P('mood_'+todayStr(),moodData);
+}
+
+/* ===== Countdown ===== */
+function renderCountdown(){
+  const examDate=new Date(2026,11,20,9,0,0);
+  const now=new Date();
+  const diff=examDate-now;
+  if(diff<=0){
+    document.getElementById('countdownCard').innerHTML=`
+      <div class="countdown-calendar"><div class="countdown-cal-top">考研日</div><div class="countdown-cal-num"><span class="num">🎉</span></div><div class="countdown-cal-bottom">12.20</div></div>
+      <div class="countdown-info"><strong>考试日已到！</strong><br>沉着冷静，相信自己 💪</div>`;
+    return;
+  }
+  const days=Math.floor(diff/(1000*60*60*24));
+  const totalDays=Math.floor((examDate-new Date(2026,0,1))/(1000*60*60*24));
+  const elapsed=totalDays-days;
+  const pct=Math.min(100,Math.round(elapsed/totalDays*100));
+  const months=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let topLabel='考研倒计时',infoText=days+' 天后的考研日';
+  if(days<=30){topLabel='最后冲刺';infoText='只剩 <strong>'+days+'</strong> 天，坚持住！';}
+  else if(days<=60){topLabel='加速冲刺';infoText='<strong>'+days+'</strong> 天后，全力冲刺！';}
+  else if(days<=100){topLabel='强化阶段';infoText='还有 <strong>'+days+'</strong> 天，稳扎稳打';}
+  else{topLabel='考研倒计时';infoText='还剩 <strong>'+days+'</strong> 天 · 时间充裕，持续努力';}
+  const photoData=G('countdownPhoto','');
+  document.getElementById('countdownCard').innerHTML=`
+    <div class="countdown-row">
+      <div class="countdown-calendar">
+        <div class="countdown-cal-top">${topLabel}</div>
+        <div class="countdown-cal-num"><span class="num">${days}</span><span class="unit">天</span></div>
+        <div class="countdown-cal-bottom">12月20日</div>
+      </div>
+      <div class="countdown-photo" onclick="document.getElementById('countdownPhotoInput').click()">
+        ${photoData?`<img src="${photoData}" alt="考研动力照片">`:`<div class="photo-placeholder"><div class="photo-placeholder-icon">🖼️</div><div>点击添加<br>动力照片</div></div>`}
+        <input type="file" id="countdownPhotoInput" accept="image/*" style="display:none" onchange="setCountdownPhoto(event)">
+      </div>
+    </div>
+    <div class="countdown-info">
+      <div>${infoText}</div>
+      <div class="countdown-bar-wrap"><div class="countdown-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+function setCountdownPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){P('countdownPhoto',ev.target.result);renderCountdown();};
+  reader.readAsDataURL(file);
+}
+
+/* ===== Dashboard ===== */
+function renderDashboard(){
+  renderDailyQuote();
+  renderMoodCard();
+  renderCountdown();
+  const tasks=G('tasks_'+todayStr(),[]);const done=tasks.filter(t=>t.done).length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('todayProgress').style.width=pct+'%';
+  document.getElementById('todayTaskCount').textContent=done+'/'+tasks.length;
+  let h='';
+  if(!tasks.length)h='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">还没有今日任务<br>在下方快速添加吧</div></div>';
+  else tasks.forEach((t,i)=>{h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="plan-check${t.done?' done':''}" onclick="toggleTask(${i})">${t.done?'✓':''}</div><div style="flex:1;font-size:14px;${t.done?'color:var(--text-m);text-decoration:line-through':''}">${t.text}</div><div class="text-muted" style="font-size:11px;cursor:pointer" onclick="deleteTask(${i})" title="删除">✕</div></div>`});
+  h+=`<div style="display:flex;gap:6px;margin-top:10px"><input id="dashTaskInput" placeholder="快速添加今日任务…" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;outline:none;background:var(--cream)" onkeydown="if(event.key==='Enter')dashAddTask()"><button class="btn btn-primary btn-sm" onclick="dashAddTask()">+ 添加</button></div>`;
+  document.getElementById('todayTaskList').innerHTML=h;
+  const checkins=G('checkinRecords',[]);const streak=calcStreak(checkins);
+  const mistakes=G('mistakes',[]).length;const exams=G('exams',[]).length;
+  const timerLog=G('timerLog_'+todayStr(),[]);const totalMin=timerLog.reduce((s,l)=>s+(l.duration||0),0);
+  document.getElementById('dashStats').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value">${Math.floor(totalMin/60)}h${totalMin%60}m</div><div class="stat-label">今日学习</div></div>
+    <div class="stat-card stat-card-clickable" onclick="showStreakDetail()"><div class="stat-icon">📅</div><div class="stat-value">${streak}</div><div class="stat-label">连续打卡 ›</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${mistakes}</div><div class="stat-label">错题总数</div></div>
+    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">${exams}</div><div class="stat-label">试卷分析</div></div>`;
+}
+function calcStreak(checkins){
+  if(!checkins.length)return 0;const dates=[...new Set(checkins.map(c=>c.date))].sort().reverse();
+  let streak=0;const today=new Date();today.setHours(0,0,0,0);let cur=new Date(today);
+  for(const d of dates){const cd=new Date(d);if(cd.getTime()===cur.getTime()||cd.getTime()===cur.getTime()-86400000){streak++;cur=cd}else if(streak>0)break}
+  return streak;
+}
+
+function showStreakDetail(){
+  const checkins=G('checkinRecords',[]);
+  // Group by date: sum duration per subject
+  const dayMap={};
+  checkins.forEach(c=>{if(!dayMap[c.date])dayMap[c.date]={};dayMap[c.date][c.subject]=c.duration});
+  // Also include timer logs
+  const all=G('allTimeLog',[]); // if we have timer log data somewhere, but let me get from localStorage keys
+  const allKeys=Object.keys(S());
+  allKeys.forEach(k=>{if(k.startsWith('timerLog_')){const date=k.replace('timerLog_','');const logs=G(k,[]);const min=logs.reduce((s,l)=>s+(l.duration||0),0);if(min>0){if(!dayMap[date])dayMap[date]={};dayMap[date]['timer']=(dayMap[date]['timer']||0)+Math.round(min/60*10)/10}}});
+  
+  const dates=Object.keys(dayMap).sort().reverse();
+  if(!dates.length){
+    document.getElementById('streakDailyList').innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">还没有打卡记录<br>去「背诵打卡」页面开始记录吧</div></div>';
+    showModal('streakModal');return;
+  }
+  
+  // Show last 30 days
+  const recent=dates.slice(0,30);
+  let totalH=0;let totalDays=0;
+  const subMap={};
+  recent.forEach(d=>{
+    const subs=dayMap[d];
+    let dayTotal=0;
+    Object.keys(subs).forEach(k=>{if(k!=='timer'){dayTotal+=subs[k];subMap[k]=(subMap[k]||0)+subs[k]}});
+    dayTotal+=subs['timer']||0;
+    totalH+=dayTotal;totalDays++;
+  });
+  
+  // Build subject summary
+  const subNames={英语:'英语',政治:'政治','354':'354汉语基础','445':'445汉语国际教育基础'};
+  let subSummary='';
+  Object.entries(subMap).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{subSummary+=`<span>${subNames[k]||k} ${Math.round(v/60*10)/10}h</span>`});
+  if(!subSummary)subSummary='<span>暂无</span>';
+  
+  let h='<div class="streak-summary"><div class="streak-summary-item"><div class="streak-summary-val">'+totalDays+'</div>打卡天数</div><div class="streak-summary-item"><div class="streak-summary-val">'+Math.round(totalH/6)/10+'</div>累计时长(h)</div><div class="streak-summary-item"><div class="streak-summary-val">'+(totalDays?Math.round(totalH/totalDays/6)/10:'0')+'</div>日均时长(h)</div></div>';
+  
+  recent.forEach(d=>{
+    const subs=dayMap[d];
+    let dayTotal=0;const subList=[];
+    Object.keys(subs).forEach(k=>{
+      if(k==='timer')dayTotal+=subs[k];
+      else{dayTotal+=subs[k];subList.push(`${subNames[k]||k} ${subs[k]/60>1?Math.round(subs[k]/6)/10+'h':subs[k]+'m'}`);}
+    });
+    const fd=d.slice(5);
+    h+=`<div class="streak-day-row"><div class="streak-day-date">${fd}</div><div class="streak-day-subjects">${subList.join(' · ')||'—'}</div><div class="streak-day-hours">${dayTotal>=60?Math.round(dayTotal/6)/10+'h':dayTotal+'m'}</div></div>`;
+  });
+  
+  document.getElementById('streakDailyList').innerHTML=h;
+  drawStreakChart(recent,dayMap);
+  showModal('streakModal');
+}
+
+function drawStreakChart(dates,dayMap){
+  setTimeout(()=>{ // Wait for canvas to be in DOM
+    const canvas=document.getElementById('streakChart');
+    if(!canvas||!dates.length)return;
+    const dpr=window.devicePixelRatio||1;
+    const w=canvas.clientWidth;const h=canvas.clientHeight;
+    canvas.width=w*dpr;canvas.height=h*dpr;
+    const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const pad={top:20,right:16,bottom:30,left:36};
+    const cw=w-pad.left-pad.right;const ch=h-pad.top-pad.bottom;
+    // Calc per-day totals
+    const dayTotals=dates.map(d=>{let t=0;const s=dayMap[d];Object.keys(s).forEach(k=>t+=s[k]);return t});
+    const maxH=Math.max(...dayTotals,60); // min 1 hour scale
+    const barW=Math.min(12,Math.floor(cw/dates.length)-4);
+    const gap=Math.floor((cw-dates.length*barW)/(dates.length-1+2)); // even gaps
+    const startX=pad.left+gap;
+    // Draw grid lines
+    const gridLines=4;
+    ctx.strokeStyle='rgba(0,0,0,.06)';ctx.lineWidth=1;
+    ctx.fillStyle='#9BA8B8';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='right';
+    for(let i=0;i<=gridLines;i++){
+      const y=pad.top+ch-ch*i/gridLines;
+      ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(w-pad.right,y);ctx.stroke();
+      const val=Math.round(maxH*i/gridLines/60*10)/10;
+      ctx.fillText(val+'h',pad.left-6,y+4);
+    }
+    // Draw bars
+    dayTotals.forEach((t,i)=>{
+      const barH=Math.max(2,(t/maxH)*ch);
+      const x=startX+i*(barW+gap);
+      const y=pad.top+ch-barH;
+      // Gradient bar
+      const grad=ctx.createLinearGradient(x,y,x,y+barH);
+      grad.addColorStop(0,'rgba(91,142,168,.7)');grad.addColorStop(1,'rgba(91,142,168,.35)');
+      ctx.fillStyle=grad;
+      const r=Math.min(4,barW/2);
+      ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+barW-r,y);
+      ctx.arcTo(x+barW,y,x+barW,y+r,r);ctx.lineTo(x+barW,y+barH);
+      ctx.lineTo(x,y+barH);ctx.arcTo(x,y,x,y+r,r);ctx.closePath();
+      ctx.fill();
+    });
+    // X-axis labels (show every few dates)
+    ctx.fillStyle='#9BA8B8';ctx.textAlign='center';ctx.font='10px -apple-system,sans-serif';
+    const labelStep=dates.length<=7?1:dates.length<=14?2:Math.ceil(dates.length/7);
+    for(let i=0;i<dates.length;i+=labelStep){
+      const d=dates[i].slice(5);
+      ctx.fillText(d,startX+i*(barW+gap)+barW/2,pad.top+ch+16);
+    }
+  },50);
+}
+
+/* ===== Daily Plan (Table) ===== */
+function renderDailyPlan(){
+  const tasks=G('tasks_'+todayStr(),[]);
+  let h='';
+  if(!tasks.length){document.getElementById('planEmpty').innerHTML='<div class="empty-state"><div class="empty-state-icon">✨</div><div class="empty-state-text">今天还没有计划<br>点击上方按钮添加任务</div></div>';document.getElementById('planTaskList').innerHTML='';return}
+  document.getElementById('planEmpty').innerHTML='';
+  tasks.forEach((t,i)=>{
+    h+=`<tr>
+      <td><div class="plan-check${t.done?' done':''}" onclick="toggleTask(${i})">${t.done?'✓':''}</div></td>
+      <td><span class="tag ${t.subject==='英语'?'tag-blue':t.subject==='政治'?'tag-amber':t.subject.includes('354')?'tag-green':'tag-gray'}">${t.subject}</span></td>
+      <td style="${t.done?'color:var(--text-m);text-decoration:line-through':''}">${t.text}</td>
+      <td style="white-space:nowrap">${t.duration||0}m</td>
+      <td><span class="${t.done?'plan-status-done':'plan-status-pending'}">${t.done?'✓ 完成':'待完成'}</span></td>
+      <td><button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px" onclick="deleteTask(${i})">删</button></td>
+    </tr>`;
+  });
+  document.getElementById('planTaskList').innerHTML=h;
+}
+function toggleTask(idx){const t=G('tasks_'+todayStr(),[]);t[idx].done=!t[idx].done;P('tasks_'+todayStr(),t);renderDailyPlan();if(currentPage==='dashboard')renderDashboard()}
+function deleteTask(idx){const t=G('tasks_'+todayStr(),[]);t.splice(idx,1);P('tasks_'+todayStr(),t);renderDailyPlan();renderDashboard()}
+function dashAddTask(){const inp=document.getElementById('dashTaskInput');if(!inp||!inp.value.trim())return;const t=G('tasks_'+todayStr(),[]);t.push({text:inp.value.trim(),subject:'其他',duration:null,done:false});P('tasks_'+todayStr(),t);inp.value='';renderDashboard();renderDailyPlan()}
+function openTaskModal(){document.getElementById('taskInput').value='';document.getElementById('taskDuration').value='60';showModal('taskModal')}
+function saveTask(){
+  const text=document.getElementById('taskInput').value.trim();if(!text)return toast('请输入任务名称');
+  const subject=document.getElementById('taskSubject').value;const duration=parseInt(document.getElementById('taskDuration').value)||60;
+  unshift('tasks_'+todayStr(),{text,subject,duration,done:false});
+  hideModal('taskModal');renderDailyPlan();renderDashboard();toast('任务已添加');
+}
+
+/* ===== Notes ===== */
+function openNoteModal(subject){document.getElementById('noteTitle').value='';document.getElementById('noteContent').value='';document.getElementById('noteSubject').value=subject;showModal('noteModal')}
+function saveNote(){
+  const title=document.getElementById('noteTitle').value.trim();const content=document.getElementById('noteContent').value.trim();
+  if(!title)return toast('请输入标题');const subject=document.getElementById('noteSubject').value;
+  unshift(subject+'Notes',{title,content,date:todayStr()});
+  hideModal('noteModal');renderNotes(subject+'Notes',subject+'NotesList');toast('已保存');
+}
+function renderNotes(key,cid){
+  const notes=G(key,[]);let h='';
+  if(!notes.length)h='<div class="empty-state"><div class="empty-state-icon">📒</div><div class="empty-state-text">还没有学习记录</div></div>';
+  else notes.forEach((n,i)=>{h+=`<div class="card" style="position:relative"><div class="card-title">${n.title}</div><div class="card-subtitle">${n.date}</div><div style="margin-top:8px;font-size:14px;white-space:pre-wrap">${n.content||'暂无内容'}</div><button class="btn btn-outline btn-sm" style="position:absolute;top:14px;right:14px;padding:3px 8px;font-size:11px" onclick="deleteNote('${key}',${i})">删除</button></div>`});
+  document.getElementById(cid).innerHTML=h;
+}
+function deleteNote(key,idx){const a=G(key,[]);a.splice(idx,1);P(key,a);renderNotes(key,key+'List')}
+
+/* ===== 445 Reference Books ===== */
+const books445=[
+  {name:'对外汉语教育学引论',icon:'📖',author:'刘珣'},
+  {name:'中国文化要略',icon:'🏯',author:'程裕祯'},
+  {name:'跨文化交际',icon:'🌐',author:'祖晓梅'},
+  {name:'外国文化史',icon:'🏛️',author:'孟昭毅'},
+  {name:'教育心理学',icon:'🧠',author:'陈琦'},
+  {name:'中国现当代文学',icon:'📝',author:'钱理群'},
+];
+function renderBookGrid(){
+  const progress=G('bookProgress',{});
+  let h='';
+  books445.forEach((b,i)=>{
+    const pct=progress[b.name]||0;
+    const openIcon=['📖','📘','📗','📙','📓','📒'][i];
+    h+=`<div class="book-card" onclick="toggleBookProgress('${b.name}')">
+      <div class="book-icon">${b.icon}</div>
+      <div class="book-name">${b.name}</div>
+      <div style="font-size:11px;color:var(--text-m)">${b.author}</div>
+      <div class="book-progress"><div class="book-progress-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:10px;color:var(--text-m);margin-top:4px">学习进度 ${pct}%</div>
+    </div>`;
+  });
+  document.getElementById('bookGrid445').innerHTML=h;
+}
+function toggleBookProgress(name){
+  const progress=G('bookProgress',{});
+  progress[name]=((progress[name]||0)+20)%120;if(progress[name]>100)progress[name]=0;
+  P('bookProgress',progress);
+  renderBookGrid();
+  toast(name+' 进度 '+progress[name]+'%');
+}
+
+/* ===== Check-in (4 subjects + time wheel + pie chart) ===== */
+const SUBJECTS=['英语','政治','354汉语基础','445汉语国际教育基础'];
+const SUBJECT_COLORS={'英语':'#5B8EA8','政治':'#90A98D','354汉语基础':'#7DAABE','445汉语国际教育基础':'#C8AD60'};
+
+function switchCheckinTab(subject,el){currentCheckinSubject=subject;document.querySelectorAll('.subject-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderCheckinCalendar()}
+
+function renderCheckinCalendar(){
+  const now=new Date();const y=now.getFullYear();const m=now.getMonth();
+  const firstDay=new Date(y,m,1).getDay();const daysInMonth=new Date(y,m+1,0).getDate();
+  const records=G('checkinRecords',[]);const todayStr=todayStr();
+  document.getElementById('checkinMonthTitle').textContent=`${y}年${m+1}月 · ${currentCheckinSubject}`;
+  const subjRecords=records.filter(r=>r.subject===currentCheckinSubject);
+  const checkedDays=subjRecords.filter(r=>r.date.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).map(r=>r.date);
+  document.getElementById('checkinMonthSummary').textContent=`本月打卡 ${checkedDays.length} 天`;
+  let h='';
+  for(let i=0;i<firstDay;i++)h+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const checked=checkedDays.includes(ds);const isToday=ds===todayStr;
+    h+=`<div class="calendar-day${checked?' checked':''}${isToday?' today':''}" onclick="openCheckinModal('${ds}')">${d}</div>`;
+  }
+  document.getElementById('checkinCalendar').innerHTML=h;
+}
+
+function openCheckinModal(date){
+  selectedCheckinDate=date;
+  document.getElementById('checkinDateLabel').textContent=`${date} · ${currentCheckinSubject}`;
+  document.getElementById('checkinModalTitle').textContent='学习时长打卡';
+  initWheelPicker();
+  showModal('checkinModal');
+}
+
+function initWheelPicker(){
+  const hourCol=document.getElementById('hourWheel');
+  const halfCol=document.getElementById('halfHourWheel');
+  let h1='',h2='';
+  for(let i=0;i<=12;i++)h1+=`<div class="wheel-item" data-val="${i}">${i}</div>`;
+  for(let i=0;i<=1;i++)h2+=`<div class="wheel-item" data-val="${i*30}">${i===0?'00':'30'}</div>`;
+  hourCol.innerHTML=h1;halfCol.innerHTML=h2;
+  hourCol.scrollTop=0;halfCol.scrollTop=0;
+  hourCol.onscroll=()=>updateWheelSelection(hourCol);
+  halfCol.onscroll=()=>updateWheelSelection(halfCol);
+}
+function updateWheelSelection(col){
+  const items=col.querySelectorAll('.wheel-item');
+  items.forEach(i=>i.classList.remove('selected'));
+  const idx=Math.round(col.scrollTop/32);
+  if(items[idx])items[idx].classList.add('selected');
+}
+function getWheelValue(colId){
+  const col=document.getElementById(colId);
+  const idx=Math.round(col.scrollTop/32);
+  const items=col.querySelectorAll('.wheel-item');
+  return items[idx]?parseInt(items[idx].dataset.val):0;
+}
+function saveCheckin(){
+  const hours=getWheelValue('hourWheel');const halfMin=getWheelValue('halfHourWheel');
+  const totalHours=hours+halfMin/60;
+  if(totalHours===0)return toast('请选择学习时长');
+  const records=G('checkinRecords',[]);
+  const existing=records.findIndex(r=>r.date===selectedCheckinDate&&r.subject===currentCheckinSubject);
+  if(existing>=0)records[existing].hours=totalHours;
+  else records.push({date:selectedCheckinDate,subject:currentCheckinSubject,hours:totalHours});
+  P('checkinRecords',records);
+  hideModal('checkinModal');renderCheckinCalendar();renderDashboard();renderPieChart();
+  toast(`打卡成功！${currentCheckinSubject} ${totalHours}小时`);
+}
+
+/* Pie Chart (SVG) */
+function renderPieChart(){
+  const period=document.getElementById('piePeriod')?.value||'week';
+  const records=G('checkinRecords',[]);
+  const now=new Date();let startDate;
+  if(period==='week'){startDate=new Date(now);startDate.setDate(startDate.getDate()-7)}
+  else{startDate=new Date(now.getFullYear(),now.getMonth(),1)}
+  const startStr=fmtDate(startDate);
+  const filtered=records.filter(r=>r.date>=startStr&&r.date<=todayStr());
+  const data={};SUBJECTS.forEach(s=>{data[s]=0});
+  filtered.forEach(r=>{if(data[r.subject]!==undefined)data[r.subject]+=r.hours});
+  const total=Object.values(data).reduce((s,v)=>s+v,0);
+  if(total===0){document.getElementById('pieChartWrap').innerHTML='<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无学习数据</div></div>';document.getElementById('pieLegend').innerHTML='';document.getElementById('pieStatsSummary').innerHTML='';return}
+  // Build SVG pie
+  let svg=`<svg width="160" height="160" viewBox="0 0 160 160">`;
+  let startAngle=0;const cx=80,cy=80,r=70;
+  let legendHtml='';
+  SUBJECTS.forEach(s=>{
+    const val=data[s];if(val===0)return;
+    const angle=val/total*360;const endAngle=startAngle+angle;
+    const path=describeArc(cx,cy,r,startAngle,endAngle);
+    svg+=`<path d="${path}" fill="${SUBJECT_COLORS[s]}" stroke="#fff" stroke-width="2"/>`;
+    startAngle=endAngle;
+    const pct=Math.round(val/total*100);
+    legendHtml+=`<div class="legend-item"><div class="legend-dot" style="background:${SUBJECT_COLORS[s]}"></div>${s}: ${val}h (${pct}%)</div>`;
+  });
+  svg+=`<circle cx="${cx}" cy="${cy}" r="30" fill="var(--bg-card)"/><text x="${cx}" y="${cy-5}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--c-blue-dark)">${total}h</text><text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="var(--text-s)">总计</text></svg>`;
+  document.getElementById('pieChartWrap').innerHTML=svg;
+  document.getElementById('pieLegend').innerHTML=`<div class="chart-legend">${legendHtml}</div>`;
+  document.getElementById('pieStatsSummary').innerHTML=`<div class="text-center text-muted">${period==='week'?'最近一周':'本月'}共学习 <strong style="color:var(--c-blue-dark);font-size:16px">${total}小时</strong></div>`;
+}
+function polarToCartesian(cx,cy,r,angle){const rad=(angle-90)*Math.PI/180;return{x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)}}
+function describeArc(cx,cy,r,startAngle,endAngle){
+  const start=polarToCartesian(cx,cy,r,endAngle);const end=polarToCartesian(cx,cy,r,startAngle);
+  const largeArc=endAngle-startAngle<=180?0:1;
+  return`M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+}
+
+/* ===== Spinning Wheel (Roulette) ===== */
+const WHEEL_COLORS_354=['#5B8EA8','#7DAABE','#A8C8D8','#90A98D'];
+const WHEEL_COLORS_445=['#90A98D','#B5CCA0','#C8AD60','#E8D5A8'];
+
+function renderWheels(){
+  ['354','445'].forEach(subj=>{
+    const questions=G('reciteQuestions',[]).filter(q=>q.subject===subj);
+    const wheel=document.getElementById('wheel'+subj);
+    if(!questions.length){wheel.style.background='var(--bg-gray)';wheel.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-m);font-size:12px;padding:20px;text-align:center">暂无题目<br>请先添加</div>';return}
+    const n=Math.min(questions.length,8);const segAngle=360/n;
+    let bg='';
+    const colors=subj==='354'?WHEEL_COLORS_354:WHEEL_COLORS_445;
+    for(let i=0;i<n;i++){const c=colors[i%colors.length];bg+=`${c} ${i*segAngle}deg ${(i+1)*segAngle}deg${i<n-1?',':''}`}
+    wheel.style.background=`conic-gradient(${bg})`;
+    wheel.innerHTML='';
+    for(let i=0;i<n;i++){
+      const angle=i*segAngle+segAngle/2;
+      const label=document.createElement('div');
+      label.className='roulette-label';
+      label.textContent='Q'+(i+1);
+      const rad=angle*Math.PI/180;
+      label.style.transform=`rotate(${angle}deg) translate(50px) rotate(${angle>90?180:0}deg)`;
+      label.style.left='50%';label.style.top='50%';
+      wheel.appendChild(label);
+    }
+  });
+}
+
+function spinWheel(subj){
+  const questions=G('reciteQuestions',[]).filter(q=>q.subject===subj);
+  if(!questions.length)return toast('题库为空，请先添加题目');
+  const wheel=document.getElementById('wheel'+subj);
+  const n=Math.min(questions.length,8);
+  const segAngle=360/n;const randomIdx=Math.floor(Math.random()*n);
+  const spins=5;const targetAngle=spins*360+(360-randomIdx*segAngle-segAngle/2);
+  wheelRotations[subj]+=targetAngle;
+  wheel.style.transform=`rotate(${wheelRotations[subj]}deg)`;
+  setTimeout(()=>{
+    const q=questions[randomIdx%questions.length];
+    document.getElementById('flashcardQuestion').textContent=q.question;
+    document.getElementById('flashcardAnswer').textContent=q.answer;
+    document.getElementById('flashcard').classList.remove('flipped');
+    document.querySelector('.flashcard-hint').style.display='block';
+    toast(`抽取到 ${subj==='354'?'354':'445'} 的题目！`);
+  },3100);
+}
+
+function renderQuiz(){const questions=G('reciteQuestions',[]);document.getElementById('quizTotal').textContent='题库：'+questions.length+' 题';renderWheels()}
+function flipCard(){document.getElementById('flashcard').classList.toggle('flipped')}
+function openReciteModal(){document.getElementById('reciteQuestion').value='';document.getElementById('reciteAnswer').value='';showModal('reciteModal')}
+function saveReciteQuestion(){
+  const q=document.getElementById('reciteQuestion').value.trim();const a=document.getElementById('reciteAnswer').value.trim();
+  const subj=document.getElementById('reciteSubjectSelect').value;
+  if(!q||!a)return toast('请输入题目和答案');
+  unshift('reciteQuestions',{subject:subj,question:q,answer:a,date:todayStr()});
+  hideModal('reciteModal');renderQuiz();toast('题目已添加');
+}
+
+/* ===== Timer ===== */
+function updateTimerDisplay(){const m=Math.floor(timerSec/60),s=timerSec%60;document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+function setTimer(min,btn){timerSec=min*60;timerTotal=min*60;timerStartSec=timerTotal;updateTimerDisplay();document.querySelectorAll('.timer-preset').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+function toggleTimer(){timerRunning?stopTimer():startTimer()}
+function startTimer(){if(timerSec<=0){timerSec=timerTotal;updateTimerDisplay()}timerRunning=true;timerStartSec=timerSec;document.getElementById('timerStartBtn').textContent='⏸ 暂停';document.getElementById('timerStartBtn').className='btn btn-outline';timerInterval=setInterval(()=>{timerSec--;updateTimerDisplay();if(timerSec<=0)timerComplete()},1000)}
+function stopTimer(){if(!timerRunning)return;timerRunning=false;clearInterval(timerInterval);const elapsed=Math.round((timerStartSec-timerSec)/60);if(elapsed>=1){unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`已记录 ${elapsed} 分钟学习 ⏱️`)}document.getElementById('timerStartBtn').textContent='▶ 继续';document.getElementById('timerStartBtn').className='btn btn-primary'}
+function resetTimer(){stopTimer();timerSec=timerTotal;updateTimerDisplay();document.getElementById('timerStartBtn').textContent='▶ 开始';document.getElementById('timerStartBtn').className='btn btn-primary'}
+function timerComplete(){timerRunning=false;clearInterval(timerInterval);timerSec=timerTotal;updateTimerDisplay();document.getElementById('timerStartBtn').textContent='▶ 开始';const elapsed=Math.round(timerStartSec/60);unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`完成了一次 ${elapsed} 分钟专注 ✨`)}
+function renderTimerLog(){const log=G('timerLog_'+todayStr(),[]);let h='';if(!log.length)h='<div class="empty-state"><div class="empty-state-icon">⏱️</div><div class="empty-state-text">今天还没有学习记录</div></div>';else log.forEach(l=>{h+=`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>📖 专注学习</span><span class="text-muted">${l.duration}分钟 · ${l.time}</span></div>`});document.getElementById('timerLog').innerHTML=h;const log2=G('timerLog_'+todayStr(),[]);document.getElementById('timerSessions').textContent='今日专注：'+log2.length+' 次'}
+
+/* ===== Mistakes (Photo + Voice) ===== */
+function renderMistakes(){
+  const mistakes=G('mistakes',[]);const filter=document.getElementById('mistakeFilter')?.value||'all';
+  const filtered=filter==='all'?mistakes:mistakes.filter(m=>m.subject===filter);
+  let h='';
+  if(!filtered.length)h='<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">还没有错题记录</div></div>';
+  else filtered.forEach(m=>{
+    const origIdx=mistakes.indexOf(m);
+    let photoHtml=m.photo?`<img src="${m.photo}" style="width:100%;border-radius:var(--r);margin-top:8px" onclick="window.open('${m.photo}')">`:'';
+    h+=`<div class="card">
+      <div class="flex-between mb-sm"><span class="tag tag-amber">${m.subject}</span><span class="text-muted">${m.date||''}</span></div>
+      <div class="card-title">${m.source}</div>
+      ${photoHtml}
+      <div class="mt-sm"><strong>原题：</strong><span style="white-space:pre-wrap">${m.question||'无'}</span></div>
+      <div class="mt-sm"><strong>错因：</strong><span style="white-space:pre-wrap">${m.reason||'无'}</span></div>
+      <div class="mt-sm" style="color:var(--c-green)"><strong>正解：</strong><span style="white-space:pre-wrap">${m.correct||'无'}</span></div>
+      <button class="btn btn-outline btn-sm mt-sm" onclick="deleteMistake(${origIdx})">删除</button></div>`;
+  });
+  document.getElementById('mistakesList').innerHTML=h;
+}
+function openMistakeModal(){
+  document.getElementById('mistakeSource').value='';document.getElementById('mistakeQuestion').value='';
+  document.getElementById('mistakeReason').value='';document.getElementById('mistakeCorrect').value='';
+  currentPhotoData='';document.getElementById('mistakePhotoPreview').classList.remove('show');
+  showModal('mistakeModal');
+}
+function handlePhotoUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  if(file.size>2*1024*1024){toast('图片太大，请压缩后上传（<2MB）');return}
+  const reader=new FileReader();
+  reader.onload=function(ev){currentPhotoData=ev.target.result;const preview=document.getElementById('mistakePhotoPreview');preview.src=currentPhotoData;preview.classList.add('show')};
+  reader.readAsDataURL(file);
+}
+function saveMistake(){
+  const subject=document.getElementById('mistakeSubjectSelect').value;
+  const source=document.getElementById('mistakeSource').value.trim();
+  if(!source)return toast('请填写题目来源');
+  unshift('mistakes',{subject,source,question:document.getElementById('mistakeQuestion').value.trim(),reason:document.getElementById('mistakeReason').value.trim(),correct:document.getElementById('mistakeCorrect').value.trim(),photo:currentPhotoData,date:todayStr()});
+  hideModal('mistakeModal');renderMistakes();renderDashboard();toast('错题已记录');
+}
+function deleteMistake(idx){const a=G('mistakes',[]);a.splice(idx,1);P('mistakes',a);renderMistakes()}
+
+/* Voice Input (Web Speech API) */
+function toggleVoice(targetId,btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('当前浏览器不支持语音输入');return}
+  if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;if(voiceBtnEl)voiceBtnEl.classList.remove('recording');toast('语音输入已停止');return}
+  voiceRecognition=new SR();voiceRecognition.lang='zh-CN';voiceRecognition.continuous=true;voiceRecognition.interimResults=true;
+  voiceTarget=targetId;voiceBtnEl=btn;btn.classList.add('recording');
+  const input=document.getElementById(targetId);const originalText=input.value;
+  voiceRecognition.onresult=function(e){
+    let finalText=originalText;
+    for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=e.results[i][0].transcript}
+    input.value=finalText;
+  };
+  voiceRecognition.onerror=function(){toast('语音识别出错');btn.classList.remove('recording')};
+  voiceRecognition.onend=function(){btn.classList.remove('recording');voiceRecognition=null};
+  voiceRecognition.start();toast('开始说话，语音输入中...');
+}
+
+/* ===== Exam Analysis (Line Chart + Sections) ===== */
+function renderExams(){
+  const exams=G('exams',[]);const filter=document.getElementById('examFilter')?.value||'all';
+  const filtered=filter==='all'?exams:exams.filter(e=>e.subject===filter);
+  renderExamLineChart(filtered,filter);
+  let h='';
+  if(!filtered.length)h='<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">还没有试卷分析记录</div></div>';
+  else filtered.forEach(e=>{
+    const origIdx=exams.indexOf(e);const pct=e.total?Math.round(e.score/e.total*100):0;
+    let sectionsHtml='';
+    if(e.sections&&e.sections.length){
+      sectionsHtml='<div style="margin-top:8px;font-size:12px"><strong>板块得分：</strong></div><div style="margin-top:4px">';
+      e.sections.forEach(s=>{const acc=s.total?Math.round(s.score/s.total*100):0;sectionsHtml+=`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${s.name}</span><span>${s.score}/${s.total} (${acc}%)</span></div>`});
+      sectionsHtml+='</div>';
+    }
+    h+=`<div class="card">
+      <div class="flex-between mb-sm"><span class="tag tag-blue">${e.subject}</span><span class="text-muted">${e.date||''} · ${e.timeSpent||0}分钟</span></div>
+      <div class="card-title">${e.name}</div>
+      <div class="mt-sm"><strong>成绩：</strong>${e.score}/${e.total}（<span style="color:${pct>=60?'var(--c-green)':'var(--danger)'};font-weight:600">${pct}%</span>）</div>
+      ${sectionsHtml}
+      ${e.mistakes?`<div class="mt-sm" style="font-size:13px"><strong>📌 错题备注：</strong><span style="white-space:pre-wrap">${e.mistakes}</span></div>`:''}
+      ${e.forgotten?`<div class="mt-sm" style="font-size:13px;color:var(--warning)"><strong>🧠 遗忘知识点：</strong><span style="white-space:pre-wrap">${e.forgotten}</span></div>`:''}
+      ${e.summary?`<div class="mt-sm" style="font-size:13px"><strong>📝 总结：</strong><span style="white-space:pre-wrap">${e.summary}</span></div>`:''}
+      <button class="btn btn-outline btn-sm mt-sm" onclick="deleteExam(${origIdx})">删除</button></div>`;
+  });
+  document.getElementById('examList').innerHTML=h;
+}
+
+function renderExamLineChart(exams,filter){
+  const chartEl=document.getElementById('examLineChart');
+  if(!exams.length){chartEl.innerHTML='<div class="empty-state"><div class="empty-state-icon">📈</div><div class="empty-state-text">添加试卷后可查看成绩趋势</div></div>';return}
+  // Group by subject
+  const bySubject={};
+  exams.forEach(e=>{if(!bySubject[e.subject])bySubject[e.subject]=[];bySubject[e.subject].push(e)});
+  const sorted=Object.keys(bySubject).map(subj=>({subject:subj,data:bySubject[subj].sort((a,b)=>(a.date||'').localeCompare(b.date||''))}));
+  const allScores=exams.map(e=>e.total?e.score/e.total*100:0);
+  const maxY=Math.ceil(Math.max(...allScores,100)/10)*10;
+  const w=Math.max(300,exams.length*60+60);const h=160;const padL=35;const padB=30;const padT=20;const padR=20;
+  const chartW=w-padL-padR;const chartH=h-padT-padB;
+  let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="max-width:100%">`;
+  // Grid lines
+  for(let i=0;i<=5;i++){const y=padT+chartH*(1-i/5);svg+=`<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;svg+=`<text x="${padL-5}" y="${y+3}" text-anchor="end" font-size="9" fill="var(--text-s)">${i*20}</text>`}
+  const colors=SUBJECTS.map(s=>SUBJECT_COLORS[s]);
+  let ci=0;let legendHtml='';
+  sorted.forEach(({subject,data})=>{
+    const color=SUBJECT_COLORS[subject]||colors[ci%colors.length];ci++;
+    legendHtml+=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;margin-right:12px"><span style="width:12px;height:3px;background:${color};border-radius:2px;display:inline-block"></span>${subject}</span>`;
+    const pts=data.map((e,i)=>{
+      const x=padL+chartW*((i+0.5)/data.length);
+      const y=padT+chartH*(1-(e.total?e.score/e.total*100:0)/maxY);
+      return{x,y,score:e.score,total:e.total,date:e.date,name:e.name};
+    });
+    if(pts.length===1){svg+=`<circle cx="${pts[0].x}" cy="${pts[0].y}" r="5" fill="${color}"/>`}
+    else{
+      let pathD='';pts.forEach((p,i)=>{pathD+=(i===0?'M':' L ')+p.x+' '+p.y});
+      svg+=`<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+      pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${color}"/>`});
+    }
+    pts.forEach((p,i)=>{svg+=`<text x="${p.x}" y="${p.y-8}" text-anchor="middle" font-size="9" fill="var(--text-p)" font-weight="600">${p.score}</text>`;svg+=`<text x="${p.x}" y="${h-padB+12}" text-anchor="middle" font-size="8" fill="var(--text-s)">试卷${i+1}</text>`});
+  });
+  svg+='</svg>';
+  chartEl.innerHTML=svg+'<div style="margin-top:8px">'+legendHtml+'</div>';
+}
+
+function openExamModal(){
+  document.getElementById('examName').value='';document.getElementById('examScore').value='';
+  document.getElementById('examTotal').value='100';document.getElementById('examTime').value='';
+  document.getElementById('examMistakes').value='';document.getElementById('examForgotten').value='';
+  document.getElementById('examSummary').value='';document.getElementById('examDate').value=todayStr();
+  document.getElementById('examSections').innerHTML='';
+  showModal('examModal');
+}
+function addSectionRow(){
+  const container=document.getElementById('examSections');
+  const row=document.createElement('div');row.className='section-row';
+  row.innerHTML=`<input class="input" placeholder="板块名" style="flex:2"><input class="input" type="number" placeholder="得分" style="flex:1" min="0"><input class="input" type="number" placeholder="满分" style="flex:1" min="1"><span class="section-acc">--%</span><button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px" onclick="this.parentElement.remove()">×</button>`;
+  const scoreInput=row.children[1];const totalInput=row.children[2];const accSpan=row.children[3];
+  function updateAcc(){const s=parseFloat(scoreInput.value)||0;const t=parseFloat(totalInput.value)||0;accSpan.textContent=t>0?Math.round(s/t*100)+'%':'--%'}
+  scoreInput.oninput=updateAcc;totalInput.oninput=updateAcc;
+  container.appendChild(row);
+}
+function saveExam(){
+  const name=document.getElementById('examName').value.trim();if(!name)return toast('请输入试卷名称');
+  const subject=document.getElementById('examSubjectSelect').value;
+  const score=parseFloat(document.getElementById('examScore').value)||0;
+  const total=parseFloat(document.getElementById('examTotal').value)||100;
+  const timeSpent=parseInt(document.getElementById('examTime').value)||0;
+  const sections=[];document.querySelectorAll('#examSections .section-row').forEach(r=>{
+    const name=r.children[0].value.trim();const s=parseFloat(r.children[1].value)||0;const t=parseFloat(r.children[2].value)||0;
+    if(name)sections.push({name,score:s,total:t});
+  });
+  unshift('exams',{name,subject,score,total,timeSpent,sections,mistakes:document.getElementById('examMistakes').value.trim(),forgotten:document.getElementById('examForgotten').value.trim(),summary:document.getElementById('examSummary').value.trim(),date:document.getElementById('examDate').value||todayStr()});
+  hideModal('examModal');renderExams();renderDashboard();toast('试卷分析已保存');
+}
+function deleteExam(idx){const a=G('exams',[]);a.splice(idx,1);P('exams',a);renderExams()}
+
+/* ===== Politics Hot ===== */
+function renderHot(){const hots=G('hotEvents',[]);let h='';if(!hots.length)h='<div class="empty-state"><div class="empty-state-icon">🔥</div><div class="empty-state-text">还没有记录政治热点</div></div>';else hots.forEach((h2,i)=>{h+=`<div class="card"><div class="flex-between mb-sm"><span class="tag tag-amber">${h2.keypoint||'未分类'}</span><span class="text-muted">${h2.date||''}</span></div><div class="card-title">${h2.title}</div><div class="mt-sm">${h2.summary||''}</div><button class="btn btn-outline btn-sm mt-sm" onclick="deleteHot(${i})">删除</button></div>`});document.getElementById('hotList').innerHTML=h}
+function openHotModal(){document.getElementById('hotTitle').value='';document.getElementById('hotKeypoint').value='';document.getElementById('hotSummary').value='';showModal('hotModal')}
+function saveHot(){const title=document.getElementById('hotTitle').value.trim();if(!title)return toast('请输入事件标题');unshift('hotEvents',{title,keypoint:document.getElementById('hotKeypoint').value.trim(),summary:document.getElementById('hotSummary').value.trim(),date:todayStr()});hideModal('hotModal');renderHot();toast('热点已添加')}
+function deleteHot(idx){const a=G('hotEvents',[]);a.splice(idx,1);P('hotEvents',a);renderHot()}
+
+/* ===== Daily Review ===== */
+function renderReview(){
+  const review=G('review_'+todayStr(),null);
+  if(review){document.getElementById('reviewDone').value=review.done||'';document.getElementById('reviewReflect').value=review.reflect||'';document.getElementById('reviewPlan').value=review.plan||'';selectedMood=review.mood||0;document.querySelectorAll('#moodSelector button').forEach(b=>{b.className='btn btn-outline btn-sm'});if(selectedMood)document.querySelector(`#moodSelector button[data-mood="${selectedMood}"]`)?.classList.replace('btn-outline','btn-primary')}
+  const all=[];for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=fmtDate(d);const r=G('review_'+ds,null);if(r)all.push({date:ds,...r})}
+  let h='';if(!all.length)h='<div class="empty-state"><div class="empty-state-icon">🌙</div><div class="empty-state-text">还没有复盘记录</div></div>';
+  else all.forEach(r=>{const me={5:'😊',4:'🙂',3:'😐',2:'😕',1:'😞'};h+=`<div class="card"><div class="flex-between mb-sm"><span class="tag tag-gray">${r.date}</span><span>${me[r.mood]||''}</span></div><div class="mt-sm"><strong>完成了：</strong>${r.done||'无'}</div><div class="mt-sm"><strong>反思：</strong>${r.reflect||'无'}</div><div class="mt-sm"><strong>明日计划：</strong>${r.plan||'无'}</div></div>`});
+  document.getElementById('reviewHistory').innerHTML=h;
+}
+function setMood(mood,btn){selectedMood=mood;document.querySelectorAll('#moodSelector button').forEach(b=>b.className='btn btn-outline btn-sm');btn.className='btn btn-primary btn-sm'}
+function saveReview(){const done=document.getElementById('reviewDone').value.trim();const reflect=document.getElementById('reviewReflect').value.trim();const plan=document.getElementById('reviewPlan').value.trim();P('review_'+todayStr(),{done,reflect,plan,mood:selectedMood,date:todayStr()});renderReview();toast('复盘已保存 🌙')}
+
+/* ===== Stats ===== */
+function renderStats(){
+  const totalNotes=(G('englishNotes',[]).length+G('politicsNotes',[]).length+G('course354Notes',[]).length+G('course445Notes',[]).length);
+  const totalTasks=Object.keys(S()).filter(k=>k.startsWith('tasks_')).reduce((s,k)=>s+G(k,[]).filter(t=>t.done).length,0);
+  const checkins=G('checkinRecords',[]);const checkinDays=new Set(checkins.map(c=>c.date)).size;
+  let totalMin=0;Object.keys(S()).filter(k=>k.startsWith('timerLog_')).forEach(k=>G(k,[]).forEach(l=>totalMin+=l.duration||0));
+  document.getElementById('statsOverview').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">📒</div><div class="stat-value">${totalNotes}</div><div class="stat-label">学习笔记</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value">${totalTasks}</div><div class="stat-label">完成任务</div></div>
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value">${checkinDays}</div><div class="stat-label">打卡天数</div></div>
+    <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value">${Math.floor(totalMin/60)}h</div><div class="stat-label">累计学习</div></div>`;
+  let chartHtml='';let maxMin=0;const weekData=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=fmtDate(d);const log=G('timerLog_'+ds,[]);const min=log.reduce((s,l)=>s+(l.duration||0),0);weekData.push({date:ds,min});if(min>maxMin)maxMin=min}
+  const dayLabels=['日','一','二','三','四','五','六'];
+  weekData.forEach(d=>{const barH=maxMin>0?Math.max(4,Math.round(d.min/maxMin*130)):4;const day=new Date(d.date).getDay();chartHtml+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text-m)">${d.min>0?Math.round(d.min/60*10)/10+'h':''}</span><div style="width:100%;max-width:40px;height:${barH}px;background:linear-gradient(180deg,var(--c-blue-light),var(--c-green));border-radius:6px 6px 0 0;min-height:4px"></div><span style="font-size:11px;color:var(--text-s)">${dayLabels[day]}</span></div>`});
+  document.getElementById('weeklyChart').innerHTML=chartHtml||'<div class="empty-state"><div class="empty-state-text">暂无学习数据</div></div>';
+}
+
+/* ===== Backup ===== */
+function exportData(){const data=S();const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='luran的工作台_备份_'+todayStr()+'.json';a.click();URL.revokeObjectURL(url);toast('备份文件已下载')}
+function importData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const data=JSON.parse(ev.target.result);localStorage.setItem(KEY,JSON.stringify(data));toast('数据已恢复！正在刷新...');setTimeout(()=>location.reload(),1500)}catch(ex){toast('文件格式错误')}};reader.readAsText(file)}
+function clearAllData(){if(confirm('确认清除所有学习数据？此操作不可撤销！\n\n建议先导出备份。')){if(confirm('再次确认：真的要清除所有数据吗？')){localStorage.removeItem(KEY);toast('数据已清除');setTimeout(()=>location.reload(),1000)}}}
+
+/* ===== Learning File Manager ===== */
+let pendingFile=null;
+const SECTION_ICONS={'英语学习':'🇬🇧','政治学习':'📰','354汉语基础':'📖','445汉语国际教育基础':'🌏','背诵打卡':'✅','抽题背诵':'🎴','错题记录':'📝','试卷分析':'📊','政治热点':'🔥','每日复盘':'🌙','其他资料':'📂'};
+
+function handleFileSelect(e){
+  const file=e.target.files[0];if(!file)return;
+  if(file.size>15*1024*1024){toast('文件过大，请选择 15MB 以内的文件');e.target.value='';return}
+  pendingFile=file;
+  document.getElementById('importFileName').textContent='📄 '+file.name+' ('+formatFileSize(file.size)+')';
+  showModal('fileSectionModal');
+  e.target.value='';
+}
+function confirmFileImport(){
+  if(!pendingFile)return;
+  const section=document.getElementById('fileSectionSelect').value;
+  const reader=new FileReader();
+  reader.onload=function(){
+    const fileData={name:pendingFile.name,type:pendingFile.type,size:pendingFile.size,section:section,date:todayStr(),data:reader.result};
+    unshift('learningFiles',fileData);
+    hideModal('fileSectionModal');
+    pendingFile=null;
+    renderLearningFiles();
+    toast('已添加到「'+section+'」');
+  };
+  reader.readAsDataURL(pendingFile);
+}
+function cancelFileImport(){pendingFile=null;hideModal('fileSectionModal')}
+
+function renderLearningFiles(){
+  const files=G('learningFiles',[]);
+  if(!files.length){document.getElementById('learningFilesList').innerHTML='<div class="empty-state"><div class="empty-state-text" style="font-size:13px">还没有上传学习资料</div></div>';return}
+  // Group by section
+  const groups={};
+  files.forEach(f=>{if(!groups[f.section])groups[f.section]=[];groups[f.section].push(f)});
+  let h='';
+  Object.entries(groups).forEach(([section,items])=>{
+    h+=`<div style="margin-bottom:12px"><div style="font-size:12px;color:var(--text-m);margin-bottom:6px;font-weight:600">${SECTION_ICONS[section]||'📂'} ${section} · ${items.length}个文件</div>`;
+    items.forEach((f,i)=>{
+      const ext=f.name.split('.').pop().toLowerCase();
+      const extIcon=ext==='pdf'?'📕':ext==='docx'||ext==='doc'?'📘':ext==='xlsx'||ext==='xls'?'📗':ext==='pptx'||ext==='ppt'?'📙':/^(jpg|jpeg|png|gif)$/.test(ext)?'🖼️':ext==='txt'?'📄':'📎';
+      const globalIdx=files.indexOf(f);
+      h+=`<div class="file-item"><span style="font-size:16px">${extIcon}</span><div style="flex:1;min-width:0"><div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div><div style="font-size:10px;color:var(--text-m)">${f.date} · ${formatFileSize(f.size)}</div></div>
+        <a class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;text-decoration:none" href="${f.data}" download="${f.name}">下载</a>
+        <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;color:var(--danger)" onclick="deleteLearningFile(${globalIdx})">删</button>
+      </div>`;
+    });
+    h+='</div>';
+  });
+  document.getElementById('learningFilesList').innerHTML=h;
+}
+function deleteLearningFile(idx){const files=G('learningFiles',[]);const f=files[idx];files.splice(idx,1);P('learningFiles',files);renderLearningFiles();toast('已删除 '+f.name)}
+function formatFileSize(bytes){if(bytes<1024)return bytes+'B';if(bytes<1024*1024)return (bytes/1024).toFixed(1)+'KB';return (bytes/(1024*1024)).toFixed(1)+'MB'}
+
+/* ===== Init ===== */
+init();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(()=>console.log('SW registered'));
+}
+</script>
+</body>
+</html>
