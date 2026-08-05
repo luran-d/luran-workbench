@@ -732,7 +732,7 @@ let voiceRecognition=null,voiceTarget='',voiceBtnEl=null;
 /* ===== Init ===== */
 function init(){
   const sd=S();
-  if(Object.keys(sd).length===0) loadInitData();
+  if(!sd['tasks_2026-08-04']) loadInitData();
   carryOverTasks();
   setupMidnightTimer();
   document.getElementById('currentDate').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
