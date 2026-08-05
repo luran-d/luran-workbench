@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luran-workbench-v6';
+const CACHE_NAME = 'luran-workbench-v7';
 const ASSETS = [
   './',
   './index.html',
