@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="luran的工作台">
-<meta name="theme-color" content="#A4CAE0">
+<meta name="theme-color" content="#4A90D9">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -730,6 +730,8 @@ let voiceRecognition=null,voiceTarget='',voiceBtnEl=null;
 
 /* ===== Init ===== */
 function init(){
+  carryOverTasks();
+  setupMidnightTimer();
   document.getElementById('currentDate').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
   renderDashboard();
 }
@@ -768,6 +770,32 @@ function hideModal(id){document.getElementById(id).classList.remove('show')}
 /* ===== Date helpers ===== */
 function fmtDate(d){return d.toISOString().slice(0,10)}
 function todayStr(){return fmtDate(new Date())}
+function yesterdayStr(){const d=new Date();d.setDate(d.getDate()-1);return fmtDate(d)}
+
+/* ===== Midnight auto-refresh ===== */
+function setupMidnightTimer(){
+  const now=new Date();
+  const msUntilMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,1,0)-now;
+  setTimeout(()=>{
+    carryOverTasks();
+    if(currentPage==='dashboard')renderDashboard();
+    setupMidnightTimer(); // re-schedule for next midnight
+  },msUntilMidnight);
+}
+
+/* ===== Carry over uncompleted daily plans ===== */
+function carryOverTasks(){
+  const today=todayStr(),yesterday=yesterdayStr();
+  const todayTasks=G('tasks_'+today,null);
+  if(todayTasks!==null)return; // today already has tasks or was manually cleared
+  const yTasks=G('tasks_'+yesterday,[]);
+  if(!yTasks.length)return;
+  const uncompleted=yTasks.filter(t=>!t.done);
+  if(!uncompleted.length)return;
+  // Copy uncompleted tasks to today
+  const carried=uncompleted.map(t=>({text:t.text,subject:t.subject,duration:t.duration,done:false,_carried:true}));
+  P('tasks_'+today,carried);
+}
 
 /* ===== Quotes ===== */
 const quotes=[
@@ -990,7 +1018,9 @@ function renderDashboard(){
   document.getElementById('todayTaskList').innerHTML=h;
   const checkins=G('checkinRecords',[]);const streak=calcStreak(checkins);
   const mistakes=G('mistakes',[]).length;const exams=G('exams',[]).length;
-  const timerLog=G('timerLog_'+todayStr(),[]);const totalMin=timerLog.reduce((s,l)=>s+(l.duration||0),0);
+  const timerLog=G('timerLog_'+todayStr(),[]);let totalMin=timerLog.reduce((s,l)=>s+(l.duration||0),0);
+  // Also include today's checkin hours
+  checkins.filter(c=>c.date===todayStr()).forEach(c=>{totalMin+=Math.round((c.hours||0)*60);});
   document.getElementById('dashStats').innerHTML=`
     <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value">${Math.floor(totalMin/60)}h${totalMin%60}m</div><div class="stat-label">今日学习</div></div>
     <div class="stat-card stat-card-clickable" onclick="showStreakDetail()"><div class="stat-icon">📅</div><div class="stat-value">${streak}</div><div class="stat-label">连续打卡 ›</div></div>
@@ -1006,13 +1036,24 @@ function calcStreak(checkins){
 
 function showStreakDetail(){
   const checkins=G('checkinRecords',[]);
-  // Group by date: sum duration per subject
+  // Day map: all values in MINUTES for consistency
   const dayMap={};
-  checkins.forEach(c=>{if(!dayMap[c.date])dayMap[c.date]={};dayMap[c.date][c.subject]=c.duration});
-  // Also include timer logs
-  const all=G('allTimeLog',[]); // if we have timer log data somewhere, but let me get from localStorage keys
+  // Checkin records: hours -> minutes
+  checkins.forEach(c=>{
+    if(!dayMap[c.date])dayMap[c.date]={};
+    const min=Math.round((c.hours||0)*60);
+    dayMap[c.date][c.subject]=(dayMap[c.date][c.subject]||0)+min;
+  });
+  // Timer logs: already in minutes
   const allKeys=Object.keys(S());
-  allKeys.forEach(k=>{if(k.startsWith('timerLog_')){const date=k.replace('timerLog_','');const logs=G(k,[]);const min=logs.reduce((s,l)=>s+(l.duration||0),0);if(min>0){if(!dayMap[date])dayMap[date]={};dayMap[date]['timer']=(dayMap[date]['timer']||0)+Math.round(min/60*10)/10}}});
+  allKeys.forEach(k=>{
+    if(k.startsWith('timerLog_')){
+      const date=k.replace('timerLog_','');
+      const logs=G(k,[]);
+      const min=logs.reduce((s,l)=>s+(l.duration||0),0);
+      if(min>0){if(!dayMap[date])dayMap[date]={};dayMap[date]['timer']=(dayMap[date]['timer']||0)+min;}
+    }
+  });
   
   const dates=Object.keys(dayMap).sort().reverse();
   if(!dates.length){
@@ -1022,33 +1063,28 @@ function showStreakDetail(){
   
   // Show last 30 days
   const recent=dates.slice(0,30);
-  let totalH=0;let totalDays=0;
+  let totalMin=0;let totalDays=0;
   const subMap={};
   recent.forEach(d=>{
     const subs=dayMap[d];
-    let dayTotal=0;
-    Object.keys(subs).forEach(k=>{if(k!=='timer'){dayTotal+=subs[k];subMap[k]=(subMap[k]||0)+subs[k]}});
-    dayTotal+=subs['timer']||0;
-    totalH+=dayTotal;totalDays++;
+    let dayMin=0;
+    Object.keys(subs).forEach(k=>{dayMin+=subs[k];if(k!=='timer')subMap[k]=(subMap[k]||0)+subs[k];});
+    totalMin+=dayMin;totalDays++;
   });
   
-  // Build subject summary
   const subNames={英语:'英语',政治:'政治','354':'354汉语基础','445':'445汉语国际教育基础'};
-  let subSummary='';
-  Object.entries(subMap).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{subSummary+=`<span>${subNames[k]||k} ${Math.round(v/60*10)/10}h</span>`});
-  if(!subSummary)subSummary='<span>暂无</span>';
   
-  let h='<div class="streak-summary"><div class="streak-summary-item"><div class="streak-summary-val">'+totalDays+'</div>打卡天数</div><div class="streak-summary-item"><div class="streak-summary-val">'+Math.round(totalH/6)/10+'</div>累计时长(h)</div><div class="streak-summary-item"><div class="streak-summary-val">'+(totalDays?Math.round(totalH/totalDays/6)/10:'0')+'</div>日均时长(h)</div></div>';
+  let h='<div class="streak-summary"><div class="streak-summary-item"><div class="streak-summary-val">'+totalDays+'</div>打卡天数</div><div class="streak-summary-item"><div class="streak-summary-val">'+Math.round(totalMin/6)/10+'</div>累计时长(h)</div><div class="streak-summary-item"><div class="streak-summary-val">'+(totalDays?Math.round(totalMin/totalDays/6)/10:'0')+'</div>日均时长(h)</div></div>';
   
   recent.forEach(d=>{
     const subs=dayMap[d];
-    let dayTotal=0;const subList=[];
+    let dayMin=0;const subList=[];
     Object.keys(subs).forEach(k=>{
-      if(k==='timer')dayTotal+=subs[k];
-      else{dayTotal+=subs[k];subList.push(`${subNames[k]||k} ${subs[k]/60>1?Math.round(subs[k]/6)/10+'h':subs[k]+'m'}`);}
+      dayMin+=subs[k];
+      if(k!=='timer')subList.push(`${subNames[k]||k} ${subs[k]>=60?Math.round(subs[k]/6)/10+'h':subs[k]+'m'}`);
     });
     const fd=d.slice(5);
-    h+=`<div class="streak-day-row"><div class="streak-day-date">${fd}</div><div class="streak-day-subjects">${subList.join(' · ')||'—'}</div><div class="streak-day-hours">${dayTotal>=60?Math.round(dayTotal/6)/10+'h':dayTotal+'m'}</div></div>`;
+    h+=`<div class="streak-day-row"><div class="streak-day-date">${fd}</div><div class="streak-day-subjects">${subList.join(' · ')||'—'}</div><div class="streak-day-hours">${dayMin>=60?Math.round(dayMin/6)/10+'h':dayMin+'m'}</div></div>`;
   });
   
   document.getElementById('streakDailyList').innerHTML=h;
@@ -1350,14 +1386,26 @@ function saveReciteQuestion(){
   hideModal('reciteModal');renderQuiz();toast('题目已添加');
 }
 
+/* ===== Sound Effects ===== */
+function playBeep(type){
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';
+    if(type==='start'){osc.frequency.setValueAtTime(660,ctx.currentTime);osc.frequency.setValueAtTime(880,ctx.currentTime+0.1);gain.gain.setValueAtTime(0.3,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);}
+    else if(type==='stop'){osc.frequency.setValueAtTime(440,ctx.currentTime);osc.frequency.setValueAtTime(330,ctx.currentTime+0.15);gain.gain.setValueAtTime(0.25,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.35);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.35);}
+    else if(type==='complete'){gain.gain.setValueAtTime(0.2,ctx.currentTime);for(let i=0;i<3;i++){osc.frequency.setValueAtTime(880,ctx.currentTime+i*0.2);osc.frequency.setValueAtTime(660,ctx.currentTime+i*0.2+0.1);}gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.7);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.7);}
+  }catch(e){/* silent fallback */}
+}
+
 /* ===== Timer ===== */
 function updateTimerDisplay(){const m=Math.floor(timerSec/60),s=timerSec%60;document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function setTimer(min,btn){timerSec=min*60;timerTotal=min*60;timerStartSec=timerTotal;updateTimerDisplay();document.querySelectorAll('.timer-preset').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 function toggleTimer(){timerRunning?stopTimer():startTimer()}
-function startTimer(){if(timerSec<=0){timerSec=timerTotal;updateTimerDisplay()}timerRunning=true;timerStartSec=timerSec;document.getElementById('timerStartBtn').textContent='⏸ 暂停';document.getElementById('timerStartBtn').className='btn btn-outline';timerInterval=setInterval(()=>{timerSec--;updateTimerDisplay();if(timerSec<=0)timerComplete()},1000)}
-function stopTimer(){if(!timerRunning)return;timerRunning=false;clearInterval(timerInterval);const elapsed=Math.round((timerStartSec-timerSec)/60);if(elapsed>=1){unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`已记录 ${elapsed} 分钟学习 ⏱️`)}document.getElementById('timerStartBtn').textContent='▶ 继续';document.getElementById('timerStartBtn').className='btn btn-primary'}
+function startTimer(){if(timerSec<=0){timerSec=timerTotal;updateTimerDisplay()}timerRunning=true;timerStartSec=timerSec;playBeep('start');document.getElementById('timerStartBtn').textContent='⏸ 暂停';document.getElementById('timerStartBtn').className='btn btn-outline';timerInterval=setInterval(()=>{timerSec--;updateTimerDisplay();if(timerSec<=0)timerComplete()},1000)}
+function stopTimer(){if(!timerRunning)return;timerRunning=false;clearInterval(timerInterval);playBeep('stop');const elapsed=Math.round((timerStartSec-timerSec)/60);if(elapsed>=1){unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`已记录 ${elapsed} 分钟学习 ⏱️`)}document.getElementById('timerStartBtn').textContent='▶ 继续';document.getElementById('timerStartBtn').className='btn btn-primary'}
 function resetTimer(){stopTimer();timerSec=timerTotal;updateTimerDisplay();document.getElementById('timerStartBtn').textContent='▶ 开始';document.getElementById('timerStartBtn').className='btn btn-primary'}
-function timerComplete(){timerRunning=false;clearInterval(timerInterval);timerSec=timerTotal;updateTimerDisplay();document.getElementById('timerStartBtn').textContent='▶ 开始';const elapsed=Math.round(timerStartSec/60);unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`完成了一次 ${elapsed} 分钟专注 ✨`)}
+function timerComplete(){timerRunning=false;clearInterval(timerInterval);playBeep('complete');timerSec=timerTotal;updateTimerDisplay();document.getElementById('timerStartBtn').textContent='▶ 开始';const elapsed=Math.round(timerStartSec/60);unshift('timerLog_'+todayStr(),{duration:elapsed,time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});renderTimerLog();if(currentPage==='dashboard')setTimeout(()=>renderDashboard(),100);toast(`完成了一次 ${elapsed} 分钟专注 ✨`)}
 function renderTimerLog(){const log=G('timerLog_'+todayStr(),[]);let h='';if(!log.length)h='<div class="empty-state"><div class="empty-state-icon">⏱️</div><div class="empty-state-text">今天还没有学习记录</div></div>';else log.forEach(l=>{h+=`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)"><span>📖 专注学习</span><span class="text-muted">${l.duration}分钟 · ${l.time}</span></div>`});document.getElementById('timerLog').innerHTML=h;const log2=G('timerLog_'+todayStr(),[]);document.getElementById('timerSessions').textContent='今日专注：'+log2.length+' 次'}
 
 /* ===== Mistakes (Photo + Voice) ===== */
