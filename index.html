@@ -731,6 +731,8 @@ let voiceRecognition=null,voiceTarget='',voiceBtnEl=null;
 
 /* ===== Init ===== */
 function init(){
+  const sd=S();
+  if(Object.keys(sd).length===0) loadInitData();
   carryOverTasks();
   setupMidnightTimer();
   document.getElementById('currentDate').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
@@ -1606,7 +1608,7 @@ function exportData(){const data=S();const blob=new Blob([JSON.stringify(data,nu
 function importData(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const data=JSON.parse(ev.target.result);localStorage.setItem(KEY,JSON.stringify(data));toast('数据已恢复！正在刷新...');setTimeout(()=>location.reload(),1500)}catch(ex){toast('文件格式错误')}};reader.readAsText(file)}
 function clearAllData(){if(confirm('确认清除所有学习数据？此操作不可撤销！\n\n建议先导出备份。')){if(confirm('再次确认：真的要清除所有数据吗？')){localStorage.removeItem(KEY);toast('数据已清除');setTimeout(()=>location.reload(),1000)}}}
 
-function syncYesterdayData(){
+function loadInitData(){
   const Y='2026-08-04',d={
     ['tasks_'+Y]:[
       {text:'英语单词背诵 Unit 28（100词）',subject:'英语学习',duration:60,done:true},
@@ -1664,8 +1666,12 @@ function syncYesterdayData(){
     const existing=S();
     Object.keys(d).forEach(k=>{existing[k]=d[k]});
     localStorage.setItem(KEY,JSON.stringify(existing));
-    toast('已同步昨日学习数据！');setTimeout(()=>location.reload(),1200);
-  }catch(e){toast('同步失败，请重试')}
+  }catch(e){}
+}
+
+function syncYesterdayData(){
+  loadInitData();
+  toast('已同步昨日学习数据！');setTimeout(()=>location.reload(),1200);
 }
 
 /* ===== Learning File Manager ===== */
