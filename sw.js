@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luran-workbench-v9';
+const CACHE_NAME = 'luran-workbench-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -22,22 +22,20 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+    fetch(event.request).then(response => {
+      // Network success - cache and return
+      if (response && response.status === 200) {
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        return response;
-      }).catch(() => {
-        // Offline fallback: return the cached index.html for navigation requests
+      }
+      return response;
+    }).catch(() => {
+      // Network failed - fallback to cache
+      return caches.match(event.request).then(cached => {
+        if (cached) return cached;
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
